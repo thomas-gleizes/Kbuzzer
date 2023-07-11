@@ -8,12 +8,11 @@ export const Home = () => {
     <div
       className={css({
         display: "flex",
-        flexDir: { base: "column", lg: "row" },
+        flexDir: { base: "column", md: "row" },
         justifyContent: "space-evenly",
         alignItems: "center",
         h: "full",
         py: 10,
-        bg: "gray.200",
       })}
     >
       <div

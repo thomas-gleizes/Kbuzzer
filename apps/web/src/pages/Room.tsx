@@ -19,12 +19,35 @@ const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
       const initialDiff = timestamp - initialTimestamp
 
       setProgress((diff / initialDiff) * 100)
-    }, 100)
+    }, 10)
 
     return () => clearInterval(interval)
   }, [timestamp])
 
-  return <div className={css({ h: 2, bgColor: "red" })} style={{ width: `${progress}%` }} />
+  return (
+    <div
+      className={css({
+        display: "flex",
+        justifyContent: "end",
+        bg: "gray.300",
+        h: 2,
+        rounded: "xl",
+        width: "full",
+      })}
+    >
+      <div
+        className={css({
+          h: "full",
+          rounded: "xl",
+          transitionDuration: "10ms",
+          bgGradient: "to-r",
+          gradientFrom: "purple.700",
+          gradientTo: "red.700",
+        })}
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  )
 }
 
 export const Room = () => {
@@ -35,7 +58,7 @@ export const Room = () => {
   if (status !== WebSocket.OPEN) return <Navigate to="/" />
 
   return (
-    <div>
+    <div className={css({ p: 10 })}>
       {status === WebSocket.OPEN ? "Connected" : "Unconnected"}
 
       <div>
@@ -76,7 +99,6 @@ export const Room = () => {
             transitionDuration: "100ms",
             _hover: {
               shadow: "xl",
-              scale: "1.05",
             },
           })}
         >
@@ -102,7 +124,6 @@ export const Room = () => {
             transitionDuration: "100ms",
             _hover: {
               shadow: "xl",
-              scale: "1.05",
             },
           })}
         >
