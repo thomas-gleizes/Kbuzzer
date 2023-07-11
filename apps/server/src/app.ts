@@ -13,7 +13,7 @@ app.register(websocket)
 declare type Room = {
   connections: Map<string, WebSocket>
   admin: string
-  buzzedQueue: Set<string>
+  buzzed: string | null
   delay: number
 }
 
@@ -33,12 +33,10 @@ app.register(
 
       const code = generateRandomCode(new Set(rooms.keys()))
 
-      console.log(`Room created {${code}} by {${username}}`)
-
       rooms.set(code, {
         connections: new Map(),
         admin: request.body.username,
-        buzzedQueue: new Set<string>(),
+        buzzed: null,
         delay: 1000 * 10,
       })
 
@@ -83,17 +81,23 @@ app.register(
 
         switch (message.type) {
           case "buzz":
-            if (room.buzzedQueue.has(username)) return
-            room.buzzedQueue.add(username)
+            if (room.buzzed === null) {
+              room.buzzed = username
 
-            broadcast({ type: "queue", queue: Array.from(room.buzzedQueue) })
+              broadcast({ type: "buzz", username, expireAt: Date.now() + room.delay })
+
+              if (room.delay !== Infinity)
+                setTimeout(() => {
+                  room.buzzed = null
+                  broadcast({ type: "clear" })
+                }, room.delay)
+            }
             break
           case "clear":
-            if (!isRoomAdmin) return
-            room.buzzedQueue.clear()
-
-            broadcast({ type: "queue", queue: Array.from(room.buzzedQueue) })
-
+            if (isRoomAdmin) {
+              room.buzzed = null
+              broadcast({ type: "clear" })
+            }
             break
           default:
             break

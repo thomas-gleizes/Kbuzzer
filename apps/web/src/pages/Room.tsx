@@ -1,9 +1,34 @@
-import { useGlobalContext } from "../context/global"
 import { Navigate, useParams } from "react-router-dom"
+
 import { css } from "../../styled-system/css"
+import { useGlobalContext } from "../context/global"
+import React, { useEffect, useState } from "react"
+
+const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
+  const [progress, setProgress] = useState<number>(0)
+  const [initialTimestamp] = useState<number>(Date.now())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now()
+
+      const diff = timestamp - now
+
+      if (diff < 0) return clearInterval(interval)
+
+      const initialDiff = timestamp - initialTimestamp
+
+      setProgress((diff / initialDiff) * 100)
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [timestamp])
+
+  return <div className={css({ h: 2, bgColor: "red" })} style={{ width: `${progress}%` }} />
+}
 
 export const Room = () => {
-  const { status, queue, users, sendMessage } = useGlobalContext()
+  const { status, active, users, sendMessage } = useGlobalContext()
 
   const { id } = useParams()
 
@@ -29,18 +54,13 @@ export const Room = () => {
         </div>
       </div>
       <div>
-        <h2>Queue</h2>
-        <div>
-          <ul>
-            {queue.map((user, index) => (
-              <li key={index}>{user}</li>
-            ))}
-          </ul>
-        </div>
+        <h2>Buzz : {active !== null ? active.username : "Personne"}</h2>
+        {active?.expireAt && <ExpireIn timestamp={active.expireAt} />}
       </div>
       <div>
         <button
           onClick={() => sendMessage({ type: "buzz" })}
+          disabled={active !== null}
           className={css({
             backgroundGradient: "to-bl",
             gradientFrom: "purple.700",
@@ -66,6 +86,7 @@ export const Room = () => {
       <div>
         <button
           onClick={() => sendMessage({ type: "clear" })}
+          disabled={active === null}
           className={css({
             backgroundGradient: "to-bl",
             gradientFrom: "purple.700",

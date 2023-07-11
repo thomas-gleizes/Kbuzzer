@@ -14,7 +14,7 @@ const Layout = () => {
         className={css({
           h: "12",
           shadow: "xl",
-          backgroundGradient: "to-bl",
+          bgGradient: "to-bl",
           gradientFrom: "blue.700",
           gradientTo: "purple.700",
           px: 8,
