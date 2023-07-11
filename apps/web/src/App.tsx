@@ -1,12 +1,13 @@
 import React from "react"
-import { Link, Router } from "@reach/router"
+import { Link, Outlet, Route, Routes } from "react-router-dom"
 
-import { GlobalContextProvider } from "./context/global"
 import { css } from "../styled-system/css"
-import Home from "./pages/Home"
-import Room from "./pages/Room"
+import { GlobalContextProvider } from "./context/global"
+import { Home } from "./pages/Home"
+import { Room } from "./pages/Room"
+import { NotFound } from "./pages/NotFound"
 
-export const App: React.FC = () => {
+const Layout = () => {
   return (
     <GlobalContextProvider>
       <header
@@ -25,10 +26,21 @@ export const App: React.FC = () => {
           </Link>
         </nav>
       </header>
-      <Router>
-        <Home path="/" />
-        <Room path="/room/:id" />
-      </Router>
+      <main>
+        <Outlet />
+      </main>
     </GlobalContextProvider>
+  )
+}
+
+export const App: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Home />} />
+        <Route path="/room/:id" element={<Room />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   )
 }

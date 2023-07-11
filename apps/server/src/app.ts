@@ -14,6 +14,7 @@ declare type Room = {
   connections: Map<string, WebSocket>
   admin: string
   buzzedQueue: Set<string>
+  delay: number
 }
 
 app.register(
@@ -23,8 +24,12 @@ app.register(
     instance.post<{ Body: { username: string } }>("/room", (request, reply) => {
       const username = request.body.username
 
-      if (username.length > 20) return reply.status(400).send({ error: "Username too long" })
-      else if (username.length < 3) return reply.status(400).send({ error: "Username too short" })
+      if (username.length > 20)
+        return reply.status(400).send({ error: "Nom d'utilisateur trop long" })
+      else if (username.length < 3)
+        return reply.status(400).send({ error: "Nom d'utilisateur trop court" })
+      else if (rooms.size > 10)
+        return reply.status(400).send({ error: "Le nombre de session en cours est atteint !" })
 
       const code = generateRandomCode(new Set(rooms.keys()))
 
@@ -34,6 +39,7 @@ app.register(
         connections: new Map(),
         admin: request.body.username,
         buzzedQueue: new Set<string>(),
+        delay: 1000 * 10,
       })
 
       reply.status(201).send({ id: code, username })
@@ -52,10 +58,14 @@ app.register(
       if (!rooms.has(roomId)) return connection.socket.close(4001, "Room not found")
 
       const room = rooms.get(roomId) as Room
+
+      if (room.connections.size >= 10)
+        return connection.socket.close(4006, "Le nombre de participants max est atteint !")
+
       const isRoomAdmin = room.admin === username
 
       if (room.connections.has(username))
-        return connection.socket.close(4002, "Username already taken")
+        return connection.socket.close(4002, "le nom d'utilisateur est déjà pris")
 
       console.log(`Connection established {${username}} to {${roomId}}`)
 
@@ -66,6 +76,8 @@ app.register(
           socket.send(JSON.stringify(message))
       }
 
+      broadcast({ type: "list", users: Array.from(room.connections.keys()) })
+
       connection.socket.on("message", (buffer) => {
         const message = JSON.parse(buffer.toString()) as any
 
@@ -75,12 +87,6 @@ app.register(
             room.buzzedQueue.add(username)
 
             broadcast({ type: "queue", queue: Array.from(room.buzzedQueue) })
-
-            setTimeout(() => {
-              if (room.buzzedQueue.has(username)) room.buzzedQueue.delete(username)
-              broadcast({ type: "queue", queue: Array.from(room.buzzedQueue) })
-            }, 10 * 1000)
-
             break
           case "clear":
             if (!isRoomAdmin) return
@@ -96,11 +102,11 @@ app.register(
 
       connection.socket.on("close", () => {
         room.connections.delete(username)
-        console.log(`Disconnected {${username}} from {${roomId}}`)
 
         if (room.connections.size === 0) {
           rooms.delete(roomId)
-          console.log(`Room close {${roomId}}`)
+        } else {
+          broadcast({ type: "list", users: Array.from(room.connections.keys()) })
         }
       })
     })

@@ -1,4 +1,3 @@
-import { RouteComponentProps } from "@reach/router"
 import { css } from "../../styled-system/css"
 
 import { FormCreateRoom } from "../components/FormCreateRoom"
@@ -10,7 +9,7 @@ export const Home = () => {
       className={css({
         display: "flex",
         flexDir: { base: "column", lg: "row" },
-        justifyContent: "space-around",
+        justifyContent: "space-evenly",
         alignItems: "center",
         h: "full",
         py: 10,
@@ -19,18 +18,32 @@ export const Home = () => {
     >
       <div
         className={css({
+          mt: 5,
+          w: "350px",
           p: 5,
-          bg: "gray.100",
-          maxW: "80%",
+          backgroundGradient: "to-br",
+          gradientFrom: "gray.50",
+          gradientTo: "stone.50",
+          rounded: "md",
+          shadow: "md",
         })}
       >
         <FormCreateRoom />
       </div>
-      <div className={css({ p: 5, bg: "gray.100", mt: 5 })}>
+      <div
+        className={css({
+          mt: 5,
+          w: "350px",
+          p: 5,
+          backgroundGradient: "to-br",
+          gradientFrom: "gray.50",
+          gradientTo: "stone.50",
+          rounded: "md",
+          shadow: "md",
+        })}
+      >
         <FormJoinRoom />
       </div>
     </div>
   )
 }
-
-export default (props: RouteComponentProps) => <Home />
