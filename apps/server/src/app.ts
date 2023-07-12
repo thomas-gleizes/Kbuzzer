@@ -14,6 +14,7 @@ declare type Room = {
   connections: Map<string, WebSocket>
   admin: string
   buzzed: string | null
+  banBuzzed: string | null
   delay: number
 }
 
@@ -37,6 +38,7 @@ app.register(
         connections: new Map(),
         admin: request.body.username,
         buzzed: null,
+        banBuzzed: null,
         delay: 1000 * 10,
       })
 
@@ -74,28 +76,42 @@ app.register(
           socket.send(JSON.stringify(message))
       }
 
-      broadcast({ type: "list", users: Array.from(room.connections.keys()) })
+      broadcast({ type: "list", users: Array.from(room.connections.keys()), admin: room.admin })
 
       connection.socket.on("message", (buffer) => {
         const message = JSON.parse(buffer.toString()) as any
 
         switch (message.type) {
           case "buzz":
-            if (room.buzzed === null) {
+            if (room.buzzed === null && room.banBuzzed !== username) {
               room.buzzed = username
 
               broadcast({ type: "buzz", username, expireAt: Date.now() + room.delay })
 
               if (room.delay !== Infinity)
                 setTimeout(() => {
-                  room.buzzed = null
-                  broadcast({ type: "clear" })
+                  if (room.buzzed === username) {
+                    room.buzzed = null
+                    room.banBuzzed = username
+
+                    connection.socket.send(
+                      JSON.stringify({ type: "ban", unBanAt: Date.now() + room.delay })
+                    )
+
+                    setTimeout(() => {
+                      if (room.banBuzzed === username) room.banBuzzed = null
+                    }, room.delay)
+
+                    broadcast({ type: "clear" })
+                  }
                 }, room.delay)
             }
             break
           case "clear":
             if (isRoomAdmin) {
               room.buzzed = null
+              room.banBuzzed = null
+
               broadcast({ type: "clear" })
             }
             break
@@ -106,6 +122,8 @@ app.register(
 
       connection.socket.on("close", () => {
         room.connections.delete(username)
+        if (room.buzzed === username) room.buzzed = null
+        if (room.banBuzzed === username) room.banBuzzed = null
 
         if (room.connections.size === 0) {
           rooms.delete(roomId)

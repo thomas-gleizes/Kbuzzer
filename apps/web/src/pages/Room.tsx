@@ -28,7 +28,7 @@ const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
     <div
       className={css({
         display: "flex",
-        justifyContent: "end",
+        justifyContent: "center",
         bg: "gray.300",
         h: 2,
         rounded: "xl",
@@ -51,39 +51,89 @@ const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
 }
 
 export const Room = () => {
-  const { status, active, users, sendMessage } = useGlobalContext()
+  const { status, active, users, ban, admin, username, sendMessage } = useGlobalContext()
 
   const { id } = useParams()
 
   if (status !== WebSocket.OPEN) return <Navigate to="/" />
 
   return (
-    <div className={css({ p: 10 })}>
-      {status === WebSocket.OPEN ? "Connected" : "Unconnected"}
-
+    <div className={css({ p: 10, maxW: "500px", m: "auto" })}>
       <div>
-        <h1>Bienvenue dans la session</h1>
-        <p>Code de session : {id}</p>
+        <h1 className={css({ fontSize: "xl" })}>Bienvenue dans la session</h1>
+        <p className={css({ fontSize: "2xl" })}>
+          Code de session :{" "}
+          <span
+            className={css({
+              fontWeight: "bold",
+              color: "transparent",
+              backgroundGradient: "to-r",
+              gradientFrom: "purple.800",
+              gradientTo: "blue.800",
+              bgClip: "text",
+            })}
+          >
+            {id}
+          </span>
+        </p>
       </div>
 
-      <div>
-        <h2>Liste des participants</h2>
-        <div>
-          <ul>
-            {users.map((user, index) => (
-              <li key={index}>{user}</li>
-            ))}
-          </ul>
+      <div
+        className={css({
+          p: 5,
+          shadow: "xl",
+          borderColor: "purple.700",
+          borderWidth: 1,
+          rounded: "lg",
+        })}
+      >
+        <h2
+          className={css({
+            textAlign: "center",
+            fontSize: "xl",
+            fontWeight: "bold",
+            color: "transparent",
+            backgroundGradient: "to-r",
+            gradientFrom: "purple.800",
+            gradientTo: "blue.800",
+            bgClip: "text",
+          })}
+        >
+          Liste des participants ({users.length})
+        </h2>
+        <div className={css({ display: "flex", flexDir: "column" })}>
+          {users.map((user, index) => (
+            <div key={index} className={css({ mt: 1 })}>
+              {user} {user === username && "(vous)"} {admin === user && "(admin)"}
+            </div>
+          ))}
         </div>
       </div>
-      <div>
-        <h2>Buzz : {active !== null ? active.username : "Personne"}</h2>
-        {active?.expireAt && <ExpireIn timestamp={active.expireAt} />}
+      <div className={css({ my: 2 })}>
+        {active && (
+          <div>
+            <h2
+              className={css({
+                textAlign: "center",
+                fontSize: "xl",
+                fontWeight: "bold",
+                color: "transparent",
+                backgroundGradient: "to-r",
+                gradientFrom: "purple.800",
+                gradientTo: "blue.800",
+                bgClip: "text",
+              })}
+            >
+              {active.username}
+            </h2>
+            <ExpireIn timestamp={active.expireAt} />
+          </div>
+        )}
       </div>
       <div>
         <button
           onClick={() => sendMessage({ type: "buzz" })}
-          disabled={active !== null}
+          disabled={active !== null || typeof ban === "number"}
           className={css({
             backgroundGradient: "to-bl",
             gradientFrom: "purple.700",
@@ -97,6 +147,10 @@ export const Room = () => {
             my: 2,
             cursor: "pointer",
             transitionDuration: "100ms",
+            _disabled: {
+              backgroundColor: "gray.500",
+              opacity: 0.5,
+            },
             _hover: {
               shadow: "xl",
             },
