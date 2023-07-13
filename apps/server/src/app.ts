@@ -42,6 +42,8 @@ app.register(
         delay: 1000 * 10,
       })
 
+      console.log(`Room cretead {${code}} by {${username}}`)
+
       reply.status(201).send({ id: code, username })
     })
 
@@ -125,8 +127,11 @@ app.register(
         if (room.buzzed === username) room.buzzed = null
         if (room.banBuzzed === username) room.banBuzzed = null
 
+        console.log(`Connection closed {${username}} to {${roomId}}`)
+
         if (room.connections.size === 0) {
           rooms.delete(roomId)
+          console.log(`Room deleted {${roomId}}`)
         } else {
           broadcast({ type: "list", users: Array.from(room.connections.keys()) })
         }

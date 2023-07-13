@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react"
+import React, { createContext, useContext, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 const GlobalContext = createContext<{
   connect: (roomId: string, username: string) => void
+  disconnect: () => void
   sendMessage: (message: object) => void
   status: number
   active: { username: string; expireAt: number } | null
@@ -51,6 +52,8 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
           case "buzz":
             return setActive({ username: message.username, expireAt: message.expireAt })
           case "clear":
+            setBan(null)
+
             return setActive(null)
           case "ban":
             setBan(message.unBanAt)
@@ -71,7 +74,11 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
     socketRef.current = ws
   }
 
-  console.log("Ban", ban)
+  const disconnect = () => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.close()
+    }
+  }
 
   const sendMessage = (message: object) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -81,7 +88,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <GlobalContext.Provider
-      value={{ connect, sendMessage, status, users, active, ban, username, admin }}
+      value={{ connect, disconnect, sendMessage, status, users, active, ban, username, admin }}
     >
       {children}
     </GlobalContext.Provider>

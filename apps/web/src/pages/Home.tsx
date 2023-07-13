@@ -13,32 +13,38 @@ export const Home = () => {
         alignItems: "center",
         h: "full",
         py: 10,
+        maxW: "1200px",
+        mx: "auto",
       })}
     >
       <div
         className={css({
-          mt: 5,
           w: "350px",
-          p: 5,
+          px: 7,
+          py: 8,
           backgroundGradient: "to-br",
           gradientFrom: "gray.50",
           gradientTo: "stone.50",
           rounded: "md",
-          shadow: "md",
+          shadow: "2xl",
+          borderWidth: 2,
+          borderColor: "purple.700",
         })}
       >
         <FormCreateRoom />
       </div>
       <div
         className={css({
-          mt: 5,
           w: "350px",
-          p: 5,
+          px: 7,
+          py: 8,
           backgroundGradient: "to-br",
           gradientFrom: "gray.50",
           gradientTo: "stone.50",
           rounded: "md",
-          shadow: "md",
+          shadow: "2xl",
+          borderWidth: 2,
+          borderColor: "purple.700",
         })}
       >
         <FormJoinRoom />
