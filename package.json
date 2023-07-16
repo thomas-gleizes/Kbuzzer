@@ -4,13 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "web:dev": "cd apps/web && pnpm dev",
+    "web:build": "cd apps/web && pnpm build && cd ../..",
+    "server:dev": "cd apps/server && pnpm dev",
+    "server:build": "cd apps/server && pnpm build && cd ../..",
+    "clean": "rm -r dist",
+    "build": "pnpm clean && pnpm server:build && pnpm web:build",
+    "start": "node dist/app.js",
+    "deploy": "pnpm build && pnpm start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "esbuild": "^0.18.13",
     "prettier": "^3.0.0",
+    "rmdir": "^1.2.0",
     "typescript": "^5.1.6"
-  }
+  },
+  "workspaces": [
+    "apps/server",
+    "apps/web"
+  ]
 }

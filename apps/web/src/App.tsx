@@ -26,7 +26,7 @@ const Layout = () => {
           </Link>
         </nav>
       </header>
-      <main className={css({ h: "calc(100vh - 48px)", bg: "white" })}>
+      <main className={css({ h: "calc(100vh - 48px)", bg: "gray.200" })}>
         <Outlet />
       </main>
     </GlobalContextProvider>

@@ -1,14 +1,20 @@
+import path from "node:path"
+
 import { fastify } from "fastify"
 import fastifyCors from "@fastify/cors"
-import websocket from "@fastify/websocket"
+import fastifyWebsocket from "@fastify/websocket"
+import fastifyStatic from "@fastify/static"
 import { WebSocket } from "ws"
+import dotenv from "dotenv"
 
 import { generateRandomCode } from "./utils/generateRandomCode"
 
 const app = fastify()
 
+dotenv.config({})
+
 app.register(fastifyCors, { origin: "*" })
-app.register(websocket)
+app.register(fastifyWebsocket)
 
 declare type Room = {
   connections: Map<string, WebSocket>
@@ -17,6 +23,11 @@ declare type Room = {
   banBuzzed: string | null
   delay: number
 }
+
+app.register(fastifyStatic, {
+  root: path.join(__dirname, "web"),
+  prefix: "/",
+})
 
 app.register(
   async (instance) => {
@@ -80,7 +91,7 @@ app.register(
 
       broadcast({ type: "list", users: Array.from(room.connections.keys()), admin: room.admin })
 
-      connection.socket.on("message", (buffer) => {
+      connection.socket.on("message", (buffer: Buffer) => {
         const message = JSON.parse(buffer.toString()) as any
 
         switch (message.type) {

@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "ts-node-dev src/app.ts"
+    "dev": "ts-node-dev src/app.ts",
+    "build": "esbuild src/app.ts --bundle --platform=node --outdir=../../dist"
   },
   "license": "ISC",
   "dependencies": {
     "@fastify/cors": "^8.3.0",
+    "@fastify/static": "^6.10.2",
     "@fastify/websocket": "^8.1.0",
+    "dotenv": "^16.3.1",
     "fastify": "^4.19.2"
   },
   "devDependencies": {
