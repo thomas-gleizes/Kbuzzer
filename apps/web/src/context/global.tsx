@@ -29,7 +29,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const connect = (roomId: string, username: string) => {
     console.log("Try to connect")
 
-    const ws = new WebSocket(`ws://localhost:8000/api/room/${roomId}?username=${username}`)
+    const ws = new WebSocket(`/api/room/${roomId}?username=${username}`)
 
     setStatus(ws.readyState)
 
