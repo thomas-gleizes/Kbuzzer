@@ -154,7 +154,9 @@ app.register(
   { prefix: "/api" }
 )
 
+const port: number = +(process.env.APP_PORT as string)
+
 app
-  .listen({ port: 8000 })
+  .listen({ port })
   .then((url) => console.log(`Server listening on ${url}`))
   .catch((err) => console.error("server crash", err))
