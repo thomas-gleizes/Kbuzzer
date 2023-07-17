@@ -15,8 +15,6 @@ export const FormJoinRoom = () => {
   const { connect } = useGlobalContext()
 
   const onSubmit: SubmitHandler<Values> = (data) => {
-    console.log("Submit()", data)
-
     connect(data.code, data.username)
   }
 
