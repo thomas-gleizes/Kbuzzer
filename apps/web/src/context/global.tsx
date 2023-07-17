@@ -18,7 +18,7 @@ export const useGlobalContext = () => useContext(GlobalContext)
 
 function getWsUrl() {
   if (document.location.protocol.includes("https")) return `wss://${document.location.host}/api`
-  return `ws://${document.location.hostname}:8000/api`
+  return `ws://${document.location.host}/api`
 }
 
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
