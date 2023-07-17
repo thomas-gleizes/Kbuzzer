@@ -4,25 +4,25 @@ import { fastify } from "fastify"
 import fastifyCors from "@fastify/cors"
 import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
-import { WebSocket } from "ws"
+import fastifySchedulePlugin from "@fastify/schedule"
+
 import dotenv from "dotenv"
 
 import { generateRandomCode } from "./utils/generateRandomCode"
+import { Room } from "./types"
+
+import { AsyncTask, CronJob } from "toad-scheduler"
 
 const app = fastify()
 
 dotenv.config({})
 
+const port: number = +(process.env.APP_PORT as string)
+
 app.register(fastifyCors, { origin: "*" })
 app.register(fastifyWebsocket)
 
-declare type Room = {
-  connections: Map<string, WebSocket>
-  admin: string
-  buzzed: string | null
-  banBuzzed: string | null
-  delay: number
-}
+let rooms = new Map<string, Room>()
 
 app
   .register(fastifyStatic, {
@@ -31,10 +31,36 @@ app
   })
   .setNotFoundHandler((req, reply) => void reply.sendFile("index.html"))
 
+app
+  .register(fastifySchedulePlugin)
+  .ready()
+  .then(() => {
+    const task = new AsyncTask(
+      "clear-rooms",
+      async () => {
+        for (const [key, room] of Array.from(rooms)) {
+          if (Date.now() - room.lastActivity > 1000 * 60 * 5) {
+            console.log(`Close inactive room {${key}} with {${room.connections.size}} connections`)
+
+            for (const socket of Array.from(room.connections.values()))
+              socket.close(4001, "La session à été fermé due à sont inactivité")
+
+            rooms.delete(key)
+          }
+        }
+      },
+      (err) => console.error("CRON JOB ERROR", err.name, err.message)
+    )
+
+    const clearRooms = new CronJob({ cronExpression: "*/10 * * * * *" }, task, {
+      preventOverrun: true,
+    })
+
+    app.scheduler.addCronJob(clearRooms)
+  })
+
 app.register(
   async (instance) => {
-    let rooms = new Map<string, Room>()
-
     instance.post<{ Body: { username: string } }>("/room", (request, reply) => {
       const username = request.body.username
 
@@ -53,6 +79,7 @@ app.register(
         buzzed: null,
         banBuzzed: null,
         delay: 1000 * 10,
+        lastActivity: Date.now(),
       })
 
       console.log(`Room cretead {${code}} by {${username}}`)
@@ -85,6 +112,7 @@ app.register(
       console.log(`Connection established {${username}} to {${roomId}}`)
 
       room.connections.set(username, connection.socket)
+      room.lastActivity = Date.now()
 
       function broadcast(message: any) {
         for (const socket of Array.from(room.connections.values()))
@@ -95,6 +123,7 @@ app.register(
 
       connection.socket.on("message", (buffer: Buffer) => {
         const message = JSON.parse(buffer.toString()) as any
+        room.lastActivity = Date.now()
 
         switch (message.type) {
           case "buzz":
@@ -155,8 +184,6 @@ app.register(
   },
   { prefix: "/api" }
 )
-
-const port: number = +(process.env.APP_PORT as string)
 
 app
   .listen({ port })

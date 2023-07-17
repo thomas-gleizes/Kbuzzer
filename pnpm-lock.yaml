@@ -26,18 +26,27 @@ importers:
       '@fastify/cors':
         specifier: ^8.3.0
         version: 8.3.0
+      '@fastify/schedule':
+        specifier: ^4.1.1
+        version: 4.1.1(fastify@4.19.2)(toad-scheduler@3.0.0)
       '@fastify/static':
         specifier: ^6.10.2
         version: 6.10.2
       '@fastify/websocket':
         specifier: ^8.1.0
         version: 8.1.0
+      croner:
+        specifier: ^6.0.6
+        version: 6.0.6
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
       fastify:
         specifier: ^4.19.2
         version: 4.19.2
+      toad-scheduler:
+        specifier: ^3.0.0
+        version: 3.0.0
     devDependencies:
       '@types/node':
         specifier: ^20.4.1
@@ -1161,6 +1170,17 @@ packages:
     resolution: {integrity: sha512-aZAXGYo6m22Fk1zZzEUKBvut/CIIQe/BapEORnxiD5Qr0kPHqqI69NtEMCme74h+at72sPhbkb4ZrLd1W3KRLA==}
     dependencies:
       fast-json-stringify: 5.7.0
+    dev: false
+
+  /@fastify/schedule@4.1.1(fastify@4.19.2)(toad-scheduler@3.0.0):
+    resolution: {integrity: sha512-riIh+eumfpoDDpNqMqzHdzYofWVhaHJYxH69OMQyVzGUJikF5luvr4LMx/uxedE1VJfmHJCUjBuMVcPLB7KsZg==}
+    peerDependencies:
+      fastify: ^4.0.0
+      toad-scheduler: '>= 2.0.0 < 4'
+    dependencies:
+      fastify: 4.19.2
+      fastify-plugin: 4.5.0
+      toad-scheduler: 3.0.0
     dev: false
 
   /@fastify/send@2.1.0:
@@ -2921,6 +2941,11 @@ packages:
   /create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
     dev: true
+
+  /croner@6.0.6:
+    resolution: {integrity: sha512-4wTLNkKefW5WzAaFdOIUK0UH94okjVObJqSfoKbAYXsUNxmU2hq8nQfBrmOjbqd0z6A5cTGbtgZFIXRg6hYEcA==}
+    engines: {node: '>=6.0'}
+    dev: false
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -5458,6 +5483,10 @@ packages:
     dependencies:
       is-number: 7.0.0
     dev: true
+
+  /toad-scheduler@3.0.0:
+    resolution: {integrity: sha512-BYmrORvaGmjziir/ra8qD3qAKczJveqK5ZOO/wn7oS5qLI4iibOza3DBGgu+EwNp9zdlBTKSeZPmxZxzGy1dxw==}
+    dev: false
 
   /toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}

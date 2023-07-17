@@ -9,7 +9,7 @@ interface Values {
 }
 
 export const FormCreateRoom = () => {
-  const { register, handleSubmit } = useForm<Values>({ defaultValues: { username: "Kalat" } })
+  const { register, handleSubmit } = useForm<Values>({ defaultValues: { username: "" } })
 
   const { connect } = useGlobalContext()
 

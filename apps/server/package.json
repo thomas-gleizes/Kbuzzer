@@ -9,10 +9,13 @@
   "license": "ISC",
   "dependencies": {
     "@fastify/cors": "^8.3.0",
+    "@fastify/schedule": "^4.1.1",
     "@fastify/static": "^6.10.2",
     "@fastify/websocket": "^8.1.0",
+    "croner": "^6.0.6",
     "dotenv": "^16.3.1",
-    "fastify": "^4.19.2"
+    "fastify": "^4.19.2",
+    "toad-scheduler": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.4.1",

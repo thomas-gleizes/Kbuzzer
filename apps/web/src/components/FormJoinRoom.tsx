@@ -9,7 +9,7 @@ interface Values {
 
 export const FormJoinRoom = () => {
   const { register, handleSubmit } = useForm<Values>({
-    defaultValues: { username: "Latak", code: "" },
+    defaultValues: { username: "", code: "" },
   })
 
   const { connect } = useGlobalContext()
