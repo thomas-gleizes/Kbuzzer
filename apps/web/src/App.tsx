@@ -1,4 +1,5 @@
 import React from "react"
+import { ToastContainer } from "react-toastify"
 import { Link, Outlet, Route, Routes } from "react-router-dom"
 
 import { css } from "../styled-system/css"
@@ -35,12 +36,26 @@ const Layout = () => {
 
 export const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="/room/:id" element={<Room />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="/room/:id" element={<Room />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </>
   )
 }

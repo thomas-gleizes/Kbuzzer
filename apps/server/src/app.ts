@@ -25,10 +25,7 @@ app.register(fastifyWebsocket)
 let rooms = new Map<string, Room>()
 
 app
-  .register(fastifyStatic, {
-    root: path.join(__dirname, "client"),
-    prefix: "/",
-  })
+  .register(fastifyStatic, { root: path.join(__dirname, "client"), prefix: "/" })
   .setNotFoundHandler((req, reply) => void reply.sendFile("index.html"))
 
 app
@@ -43,7 +40,7 @@ app
             console.log(`Close inactive room {${key}} with {${room.connections.size}} connections`)
 
             for (const socket of Array.from(room.connections.values()))
-              socket.close(4001, "La session à été fermé due à sont inactivité")
+              socket.close(4007, "La session à été fermé due à sont inactivité")
 
             rooms.delete(key)
           }
@@ -52,7 +49,7 @@ app
       (err) => console.error("CRON JOB ERROR", err.name, err.message)
     )
 
-    const clearRooms = new CronJob({ cronExpression: "*/10 * * * * *" }, task, {
+    const clearRooms = new CronJob({ cronExpression: "*/5 * * * *" }, task, {
       preventOverrun: true,
     })
 

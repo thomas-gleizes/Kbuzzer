@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
 
 const GlobalContext = createContext<{
   connect: (roomId: string, username: string) => void
@@ -17,7 +18,7 @@ export const useGlobalContext = () => useContext(GlobalContext)
 
 function getWsUrl() {
   if (document.location.protocol.includes("https")) return `wss://${document.location.host}/api`
-  return `ws://${document.location.host}/api`
+  return `ws://${document.location.hostname}:8000/api`
 }
 
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -69,10 +70,16 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
             return ""
         }
       })
+    })
 
-      ws.addEventListener("close", () => {
-        setStatus(ws.readyState)
-      })
+    ws.addEventListener("close", (event: CloseEvent) => {
+      console.log("Event", event)
+
+      if (event.code >= 4000) {
+        console.log("Event.reason", event.reason)
+        toast.error(`${event.code}: ${event.reason}`)
+      }
+      setStatus(ws.readyState)
     })
 
     socketRef.current = ws
