@@ -8,7 +8,7 @@
     "web:build": "cd apps/web && pnpm build && cd ../..",
     "server:dev": "cd apps/server && pnpm dev",
     "server:build": "cd apps/server && pnpm build && cd ../..",
-    "clean": "rm -r dist",
+    "clean": "rmdir dist 2>/dev/null || true",
     "build": "pnpm clean && pnpm server:build && pnpm web:build",
     "start": "node dist/app.js",
     "deploy": "pnpm build && pnpm start"

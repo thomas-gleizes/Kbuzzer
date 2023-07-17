@@ -15,6 +15,11 @@ const GlobalContext = createContext<{
 
 export const useGlobalContext = () => useContext(GlobalContext)
 
+function getWsUrl() {
+  if (document.location.protocol.includes("https")) return `wss://${document.location.host}/api`
+  return `ws://${document.location.host}/api`
+}
+
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const socketRef = useRef<WebSocket>()
   const navigate = useNavigate()
@@ -27,9 +32,8 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [username, setUsername] = useState<string>()
 
   const connect = (roomId: string, username: string) => {
-    console.log("Try to connect")
-
-    const ws = new WebSocket(`/api/room/${roomId}?username=${username}`)
+    const baseWSUrl = getWsUrl()
+    const ws = new WebSocket(`${baseWSUrl}/room/${roomId}?username=${username}`)
 
     setStatus(ws.readyState)
 

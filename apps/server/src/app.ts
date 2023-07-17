@@ -24,10 +24,12 @@ declare type Room = {
   delay: number
 }
 
-app.register(fastifyStatic, {
-  root: path.join(__dirname, "web"),
-  prefix: "/",
-})
+app
+  .register(fastifyStatic, {
+    root: path.join(__dirname, "client"),
+    prefix: "/",
+  })
+  .setNotFoundHandler((req, reply) => void reply.sendFile("index.html"))
 
 app.register(
   async (instance) => {
