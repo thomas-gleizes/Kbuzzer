@@ -63,6 +63,18 @@ export const Room = () => {
     return () => disconnect()
   }, [])
 
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === "") {
+        sendMessage({ type: "buzz" })
+      }
+    }
+
+    document.addEventListener("keydown", listener)
+
+    return () => document.removeEventListener("keydown", listener)
+  }, [])
+
   return (
     <div
       className={css({
