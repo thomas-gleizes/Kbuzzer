@@ -22,7 +22,7 @@ const port: number = +(process.env.APP_PORT as string)
 app.register(fastifyCors, { origin: "*" })
 app.register(fastifyWebsocket)
 
-let rooms = new Map<string, Room>()
+const rooms = new Map<string, Room>()
 
 app
   .register(fastifyStatic, { root: path.join(__dirname, "client"), prefix: "/" })
@@ -73,10 +73,17 @@ app.register(
       rooms.set(code, {
         connections: new Map(),
         admin: request.body.username,
-        buzzed: null,
-        banBuzzed: null,
-        delay: 1000 * 10,
+        responses: new Map(),
+        scores: new Map(),
+        play: false,
         lastActivity: Date.now(),
+        interval: null,
+        parameter: {
+          time: 5 * 1000,
+        },
+        broadcast: function (message) {
+          for (const socket of Array.from(this.connections.values())) socket.send(message)
+        },
       })
 
       console.log(`Room cretead {${code}} by {${username}}`)
@@ -108,53 +115,48 @@ app.register(
 
       console.log(`Connection established {${username}} to {${roomId}}`)
 
-      room.connections.set(username, connection.socket)
       room.lastActivity = Date.now()
+      room.connections.set(username, connection.socket)
+      room.scores.set(username, 0)
 
-      function broadcast(message: any) {
-        for (const socket of Array.from(room.connections.values()))
-          socket.send(JSON.stringify(message))
-      }
-
-      broadcast({ type: "list", users: Array.from(room.connections.keys()), admin: room.admin })
+      room.broadcast({
+        type: "list",
+        users: Array.from(room.connections.keys()),
+        admin: room.admin,
+      })
 
       connection.socket.on("message", (buffer: Buffer) => {
         const message = JSON.parse(buffer.toString()) as any
         room.lastActivity = Date.now()
 
         switch (message.type) {
-          case "buzz":
-            if (room.buzzed === null && room.banBuzzed !== username) {
-              room.buzzed = username
-
-              broadcast({ type: "buzz", username, expireAt: Date.now() + room.delay })
-
-              if (room.delay !== Infinity)
-                setTimeout(() => {
-                  if (room.buzzed === username) {
-                    room.buzzed = null
-                    room.banBuzzed = username
-
-                    connection.socket.send(
-                      JSON.stringify({ type: "ban", unBanAt: Date.now() + room.delay })
-                    )
-
-                    setTimeout(() => {
-                      if (room.banBuzzed === username) room.banBuzzed = null
-                    }, room.delay)
-
-                    broadcast({ type: "clear" })
-                  }
-                }, room.delay)
+          case "start":
+            if (isRoomAdmin) {
+              room.play = true
+              room.broadcast({ type: "start" })
             }
             break
-          case "clear":
-            if (isRoomAdmin) {
-              room.buzzed = null
-              room.banBuzzed = null
+          case "pause":
+            if (isRoomAdmin && room.play) {
+              if (room.interval) clearInterval(room.interval as NodeJS.Timeout)
 
-              broadcast({ type: "clear" })
+              room.interval = null
+              room.play = false
+              room.broadcast({ type: "pause" })
             }
+            break
+          case "add-response":
+            if (room.play) {
+              // si la réponse existe déjà, on la supprime
+              if (room.responses.has(username)) room.responses.delete(username)
+
+              // on ajoute la nouvelle réponse
+              room.responses.set(username, message.response)
+
+              // on renvoie la liste des répondeurs dans l'ordre
+              room.broadcast({ type: "response", list: Array.from(room.responses.keys()) })
+            }
+
             break
           default:
             break
@@ -163,16 +165,12 @@ app.register(
 
       connection.socket.on("close", () => {
         room.connections.delete(username)
-        if (room.buzzed === username) room.buzzed = null
-        if (room.banBuzzed === username) room.banBuzzed = null
-
-        console.log(`Connection closed {${username}} to {${roomId}}`)
 
         if (room.connections.size === 0) {
           rooms.delete(roomId)
           console.log(`Room deleted {${roomId}}`)
         } else {
-          broadcast({ type: "list", users: Array.from(room.connections.keys()) })
+          room.broadcast({ type: "list", users: Array.from(room.connections.keys()) })
         }
       })
     })
@@ -184,5 +182,17 @@ app.register(
 
 app
   .listen({ port })
-  .then((url) => console.log(`Server listening on ${url}`))
+  .then(async (url) => {
+    while (true) {
+      for (const room of Object.values(rooms)) {
+        if (!room.play || room.interval !== null) continue
+
+        room.interval = setInterval(() => {
+          room.broadcast({ type: "start-timer", time: room.parameter.time })
+        }, room.time)
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    }
+  })
   .catch((err) => console.error("server crash", err))

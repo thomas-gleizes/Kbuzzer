@@ -1,8 +1,8 @@
+import React, { useEffect, useState } from "react"
 import { Navigate, useParams } from "react-router-dom"
 
 import { css } from "../../styled-system/css"
 import { useGlobalContext } from "../context/global"
-import React, { useEffect, useState } from "react"
 
 const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
   const [progress, setProgress] = useState<number>(0)
