@@ -1,16 +1,9 @@
 import { WebSocket } from "ws"
+import { Worker } from "node:worker_threads"
 
 declare type Room = {
+  code: string
   connections: Map<string, WebSocket>
   admin: string
-  responses: Map<string, string>
-  scores: Map<string, number>
-  lastActivity: number
-  play: boolean
-  interval: NodeJS.Timeout | null
-  parameter: {
-    time: number
-  }
-  broadcast?: (message: any) => void
-  worker?: any
+  worker: Worker
 }

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "ts-node-dev src/app.ts",
-    "tsc": "tsc -p tsconfig.json",
+    "start": "ts-node src/app.ts",
     "build": "node build.js"
   },
   "license": "ISC",
@@ -17,7 +17,8 @@
     "croner": "^6.0.6",
     "dotenv": "^16.3.1",
     "fastify": "^4.19.2",
-    "toad-scheduler": "^3.0.0"
+    "toad-scheduler": "^3.0.0",
+    "ts-node": "^10.9.1"
   },
   "devDependencies": {
     "@chialab/esbuild-plugin-meta-url": "^0.17.7",

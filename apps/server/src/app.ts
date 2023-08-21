@@ -6,20 +6,16 @@ import fastifyCors from "@fastify/cors"
 import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
 
-import dotenv from "dotenv"
-
 import { generateRandomCode } from "./utils/generateRandomCode"
+import { APP_PORT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
+import { Room } from "./types"
 
 const app = fastify()
-
-dotenv.config({})
-
-const port: number = +(process.env.APP_PORT as string)
 
 app.register(fastifyCors, { origin: "*" })
 app.register(fastifyWebsocket)
 
-const rooms = new Map<string, Worker>()
+const rooms = new Map<string, Room>()
 
 app
   .register(fastifyStatic, { root: path.join(__dirname, "client"), prefix: "/" })
@@ -39,13 +35,16 @@ app.register(
 
       const code = generateRandomCode(new Set(rooms.keys()))
 
-      const worker = new Worker(`${__dirname}/workers/game.js`, {
-        workerData: { code, admin: username },
-      })
+      const room: Room = {
+        code: code,
+        connections: new Map(),
+        admin: username,
+        worker: new Worker(`${WORKERS_DIRECTORY}/game.js`, {
+          workerData: { code, admin: username },
+        }),
+      }
 
-      rooms.set(code, worker)
-
-      console.log("Rooms", rooms)
+      rooms.set(code, room)
 
       reply.status(201).send({ id: code, username })
     })
@@ -57,38 +56,67 @@ app.register(
       const roomId = request.params.id
       const username = request.query.username
 
-      console.log("Rooms.has()", rooms.has(roomId))
-
+      if (rooms.size >= SESSION_LIMIT) return connection.socket.close(4002, "Session limit reached")
       if (!roomId || !username) return connection.socket.close(4000, "Missing params")
       if (username.length > 20) return connection.socket.close(4004, "Username too long")
       if (username.length < 3) return connection.socket.close(4005, "Username too short")
       if (!rooms.has(roomId)) return connection.socket.close(4001, "Room not found")
 
-      const worker = rooms.get(roomId)!
+      const room = rooms.get(roomId)!
 
-      worker.postMessage({ type: "join", username, socket: connection.socket })
+      room.connections.set(username, connection.socket)
 
-      connection.socket.send(JSON.stringify({ type: "list", users: [] }))
+      function broadcast(type: string, data: object) {
+        for (const socket of Array.from(room.connections.values()))
+          socket.send(JSON.stringify({ type, data }))
+      }
+
+      room.worker.postMessage({ type: "join", username })
+
+      room.worker.on("message", (message) => {
+        console.log("Message from worker", message)
+
+        switch (message.type) {
+          case "user-list":
+            return broadcast(message.type, message.data)
+          case "error":
+            return broadcast("error", {})
+        }
+      })
 
       connection.socket.on("message", (buffer) => {
         const message = JSON.parse(buffer.toString())
 
-        worker.postMessage({ type: message.type, data: message.data })
+        room.worker.postMessage({ type: message.type, data: message.data })
       })
 
       connection.socket.on("close", () => {
         console.log("close")
 
-        worker.postMessage({ type: "leave", username })
+        room.connections.delete(username)
+        room.worker.postMessage({ type: "leave", username })
+
+        if (room.connections.size === 0) {
+          console.log("Room Deleted", roomId)
+          rooms.delete(roomId)
+          room.worker.terminate()
+        }
       })
+    })
+
+    instance.get("*", (request, reply) => {
+      return reply.status(404).send({ error: "Not found" })
     })
 
     return instance
   },
-  { prefix: "/api" }
+  { prefix: "/api" },
 )
 
+console.log("SESSION_LIMIT", SESSION_LIMIT)
+console.log("WORKERS_DIRECTORY", WORKERS_DIRECTORY)
+
 app
-  .listen({ port })
+  .listen({ port: APP_PORT })
   .then((url) => console.log("server running ", url))
   .catch((err) => console.error("server crash", err))
