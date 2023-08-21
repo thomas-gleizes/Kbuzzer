@@ -11,5 +11,6 @@ declare type Room = {
   parameter: {
     time: number
   }
-  broadcast: (message: any) => void
+  broadcast?: (message: any) => void
+  worker?: any
 }
