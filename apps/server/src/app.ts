@@ -33,7 +33,8 @@ app.register(
       else if (rooms.size > 10)
         return reply.status(400).send({ error: "Le nombre de session en cours est atteint !" })
 
-      const code = generateRandomCode(new Set(rooms.keys()))
+      // TODO : remove constante code
+      const code = "CWN9K" || generateRandomCode(new Set(rooms.keys()))
 
       const room: Room = {
         code: code,
@@ -77,15 +78,15 @@ app.register(
         console.log("Message from worker", message)
 
         switch (message.type) {
-          case "user-list":
+          case "player-list":
             return broadcast(message.type, message.data)
-          case "error":
-            return broadcast("error", {})
         }
       })
 
       connection.socket.on("message", (buffer) => {
         const message = JSON.parse(buffer.toString())
+
+        console.log("message from socket", message)
 
         room.worker.postMessage({ type: message.type, data: message.data })
       })
@@ -112,9 +113,6 @@ app.register(
   },
   { prefix: "/api" },
 )
-
-console.log("SESSION_LIMIT", SESSION_LIMIT)
-console.log("WORKERS_DIRECTORY", WORKERS_DIRECTORY)
 
 app
   .listen({ port: APP_PORT })

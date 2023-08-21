@@ -8,10 +8,31 @@ if (!workerData) throw new Error("This file can only be run as a worker")
 
 const { code, admin } = workerData
 
+type Player = {
+  name: string
+  score: number
+  connected: boolean
+}
+
+function sendPlayer(players: IterableIterator<Player>) {
+  parentPort!.postMessage({
+    type: "player-list",
+    data: Array.from(players),
+  })
+}
+
 async function task() {
-  let players: Map<string, number> = new Map<string, number>()
-  let running: boolean = true
-  let phase = PHASE.INIT
+  const players: Map<string, Player> = new Map()
+  let running: boolean = true,
+    phase = PHASE.INIT
+
+  console.log("players", players)
+
+  console.log("parentPort", parentPort)
+
+  parentPort?.addListener("message", (message) => {
+    console.log("event", message)
+  })
 
   parentPort!.on("message", (message) => {
     console.log("message from server", message)
@@ -24,13 +45,10 @@ async function task() {
             error: "Session limit reached",
           })
 
-        players.set(message.username, 0)
+        if (players.has(message.username)) players.get(message.username)!.connected = true
+        else players.set(message.username, { name: message.username, score: 0, connected: true })
 
-        parentPort!.postMessage({
-          type: "user-list",
-          data: Array.from(players.entries()).map(([name, score]) => ({ name, score })),
-        })
-
+        sendPlayer(players.values())
         break
       case "leave":
         players.delete(message.username)
@@ -38,7 +56,7 @@ async function task() {
         if (players.size === 0) {
           running = false
           parentPort!.close()
-        }
+        } else sendPlayer(players.values())
         break
       default:
         break
@@ -49,11 +67,7 @@ async function task() {
     console.log("Worker close")
   })
 
-  while (running) {
-    console.log(code, players)
-
-    await new Promise((resolve) => setTimeout(resolve, 4000))
-  }
+  while (running) {}
 }
 
 task().catch((err) => {
