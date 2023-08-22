@@ -8,26 +8,35 @@ import { Home } from "./pages/Home"
 import { Room } from "./pages/Room"
 import { NotFound } from "./pages/NotFound"
 
+const styles = {
+  header: css({
+    h: "12",
+    shadow: "xl",
+    bgGradient: "to-bl",
+    gradientFrom: "blue.700",
+    gradientTo: "purple.700",
+    px: 8,
+  }),
+  nav: css({
+    display: "flex",
+    alignItems: "center",
+    h: "full",
+  }),
+  link: css({ color: "white", fontSize: "2xl", fontWeight: "bold" }),
+  main: css({ h: "calc(100vh - 48px)", bg: "gray.200" }),
+}
+
 const Layout = () => {
   return (
     <GlobalContextProvider>
-      <header
-        className={css({
-          h: "12",
-          shadow: "xl",
-          bgGradient: "to-bl",
-          gradientFrom: "blue.700",
-          gradientTo: "purple.700",
-          px: 8,
-        })}
-      >
-        <nav className={css({ display: "flex", alignItems: "center", h: "full" })}>
-          <Link className={css({ color: "white", fontSize: "2xl", fontWeight: "bold" })} to="/">
+      <header className={styles.header}>
+        <nav className={styles.nav}>
+          <Link className={styles.link} to="/">
             K'buzzer
           </Link>
         </nav>
       </header>
-      <main className={css({ h: "calc(100vh - 48px)", bg: "gray.200" })}>
+      <main className={styles.main}>
         <Outlet />
       </main>
     </GlobalContextProvider>

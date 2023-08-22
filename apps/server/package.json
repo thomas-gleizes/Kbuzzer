@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "@Kbuzzer/server",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -9,6 +9,7 @@
   },
   "license": "ISC",
   "dependencies": {
+    "@Kbuzzer/common": "workspace:*",
     "@fastify/cors": "^8.3.0",
     "@fastify/schedule": "^4.1.1",
     "@fastify/static": "^6.10.2",

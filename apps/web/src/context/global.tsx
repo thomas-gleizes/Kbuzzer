@@ -1,17 +1,19 @@
 import React, { createContext, useContext, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
+import { useMount } from "react-use"
+
+import { PHASE, Player } from "@Kbuzzer/common"
 
 const GlobalContext = createContext<{
   connect: (roomId: string, username: string) => void
   disconnect: () => void
   sendMessage: (message: object) => void
   status: number
-  active: { username: string; expireAt: number } | null
-  users: string[]
-  ban: number | null
   admin: string | undefined
-  username: string | undefined
+  username: string | null
+  players: object[]
+  phase: keyof typeof PHASE | undefined
 }>({} as any)
 
 export const useGlobalContext = () => useContext(GlobalContext)
@@ -21,16 +23,17 @@ function getWsUrl() {
   return `ws://${document.location.host}/api`
 }
 
-export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
   const socketRef = useRef<WebSocket>()
   const navigate = useNavigate()
 
   const [status, setStatus] = useState<number>(WebSocket.CLOSED)
-  const [users, setUsers] = useState<string[]>([])
-  const [active, setActive] = useState<{ username: string; expireAt: number } | null>(null)
-  const [ban, setBan] = useState<number | null>(null)
+  const [players, setPlayers] = useState<Player[]>([])
   const [admin, setAdmin] = useState<string>()
-  const [username, setUsername] = useState<string>()
+  const [username, setUsername] = useState<string | null>(() => localStorage.getItem("username"))
+  const [phase, setPhase] = useState<keyof typeof PHASE>()
+
+  const listenersRef = useRef<Map<string, (data: any) => void>>(new Map())
 
   const connect = (roomId: string, username: string) => {
     const baseWSUrl = getWsUrl()
@@ -40,6 +43,7 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
     ws.addEventListener("open", () => {
       setUsername(username)
+      localStorage.setItem("username", username)
       console.log("Connection up")
 
       setStatus(ws.readyState)
@@ -50,25 +54,8 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const message = JSON.parse(event.data)
 
-        switch (message.type) {
-          case "list":
-            setAdmin(message.admin)
-            return setUsers(message.users)
-          case "buzz":
-            return setActive({ username: message.username, expireAt: message.expireAt })
-          case "clear":
-            setBan(null)
-
-            return setActive(null)
-          case "ban":
-            setBan(message.unBanAt)
-
-            return setTimeout(() => {
-              setBan(null)
-            }, message.unBanAt - Date.now())
-          default:
-            return ""
-        }
+        if (listenersRef.current.has(message.type))
+          listenersRef.current.get(message.type)!(message.data)
       })
     })
 
@@ -97,9 +84,35 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
+  const handleSocketMessage = (type: string, callback: (data: any) => void) => {
+    listenersRef.current.set(type, callback)
+  }
+
+  useMount(() => {
+    handleSocketMessage("change-phase", (data) => {
+      setPhase(data.phase)
+
+      switch (data.phase) {
+        case PHASE.INIT:
+          break
+        case PHASE.ANSWER:
+          break
+      }
+    })
+  })
+
   return (
     <GlobalContext.Provider
-      value={{ connect, disconnect, sendMessage, status, users, active, ban, username, admin }}
+      value={{
+        connect,
+        disconnect,
+        sendMessage,
+        status,
+        players,
+        username,
+        admin,
+        phase,
+      }}
     >
       {children}
     </GlobalContext.Provider>

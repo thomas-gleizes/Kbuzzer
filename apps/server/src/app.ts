@@ -6,9 +6,9 @@ import fastifyCors from "@fastify/cors"
 import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
 
+import type { Room } from "@Kbuzzer/common"
 import { generateRandomCode } from "./utils/generateRandomCode"
 import { APP_PORT, SESSION_PLAYER_LIMIT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
-import { Room } from "./types"
 
 const app = fastify()
 
