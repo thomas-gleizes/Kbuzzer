@@ -6,21 +6,25 @@ import { useMount } from "react-use"
 import { PHASE, Player } from "@Kbuzzer/common"
 
 const GlobalContext = createContext<{
+  isAdmin: boolean
   connect: (roomId: string, username: string) => void
   disconnect: () => void
-  sendMessage: (message: object) => void
+  sendMessage: (type: string, data: object) => void
+  handleSocketMessage: (type: string, cb: (data: object) => void) => void
   status: number
   admin: string | undefined
   username: string | null
-  players: object[]
+  players: Player[]
   phase: keyof typeof PHASE | undefined
+  expireAt: number | null
+  answers: Array<{ name: string; answer: string }> | null
 }>({} as any)
 
 export const useGlobalContext = () => useContext(GlobalContext)
 
 function getWsUrl() {
   if (document.location.protocol.includes("https")) return `wss://${document.location.host}/api`
-  return `ws://${document.location.host}/api`
+  return `ws://localhost:8000/api`
 }
 
 export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
@@ -33,11 +37,16 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
   const [username, setUsername] = useState<string | null>(() => localStorage.getItem("username"))
   const [phase, setPhase] = useState<keyof typeof PHASE>()
 
+  const [expireAt, setExpireAt] = useState<number | null>(null)
+  const [answers, setAnswers] = useState<Array<{ name: string; answer: string }> | null>(null)
+
   const listenersRef = useRef<Map<string, (data: any) => void>>(new Map())
 
   const connect = (roomId: string, username: string) => {
     const baseWSUrl = getWsUrl()
     const ws = new WebSocket(`${baseWSUrl}/room/${roomId}?username=${username}`)
+
+    console.log("connection")
 
     setStatus(ws.readyState)
 
@@ -78,9 +87,9 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
     }
   }
 
-  const sendMessage = (message: object) => {
+  const sendMessage = (type: string, data: object) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(message))
+      socketRef.current.send(JSON.stringify({ type, data }))
     }
   }
 
@@ -93,25 +102,46 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
       setPhase(data.phase)
 
       switch (data.phase) {
-        case PHASE.INIT:
-          break
         case PHASE.ANSWER:
+          setExpireAt(Date.now() + data.timeLimit * 1000)
           break
+        case PHASE.RESULT:
+          break
+        case PHASE.VALIDATE:
+          setExpireAt(null)
+          setAnswers(data.answers)
       }
     })
+
+    handleSocketMessage("player-list", (data) => {
+      console.log("Data", data)
+
+      setPlayers(data)
+    })
+
+    handleSocketMessage("info", (data) => {
+      setPhase(data.phase)
+      setAdmin(data.admin)
+    })
   })
+
+  console.log("Answers", answers)
 
   return (
     <GlobalContext.Provider
       value={{
+        isAdmin: username === admin,
         connect,
         disconnect,
         sendMessage,
+        handleSocketMessage,
         status,
         players,
         username,
         admin,
         phase,
+        expireAt,
+        answers,
       }}
     >
       {children}

@@ -41,6 +41,13 @@ export const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
     return () => clearInterval(interval)
   }, [timestamp])
 
+  useEffect(() => {
+    console.log(
+      "New Date(timestamp).toLocaleTimeString()",
+      new Date(timestamp).toLocaleTimeString(),
+    )
+  }, [])
+
   return (
     <div className={styles.progressBarContainer}>
       <div className={styles.progressBar} style={{ width: `${progress}%` }} />

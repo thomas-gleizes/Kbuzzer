@@ -10,8 +10,6 @@ const parent = parentPort
 const { code, admin } = workerData
 
 function sendPlayer(players: IterableIterator<Player>) {
-  console.log("SendPlayer()")
-
   parent.postMessage({
     type: "player-list",
     data: Array.from(players),
@@ -30,7 +28,7 @@ async function task() {
 
   console.log("worker created", code, admin)
 
-  parentPort!.on("message", (message) => {
+  parent.on("message", (message) => {
     const { type, username, data } = message
     console.log("message from server", type, username, data)
 
@@ -38,12 +36,16 @@ async function task() {
       case "join":
         if (phase === PHASE.FINISH) break
 
+        console.log("player join the game", username)
+
         if (players.has(message.username)) players.get(message.username)!.connected = true
         else players.set(message.username, { name: message.username, score: 0, connected: true })
 
         sendPlayer(players.values())
         break
       case "leave":
+        console.log("player leave the game", username)
+
         players.delete(message.username)
 
         if (players.size === 0) {
@@ -70,11 +72,6 @@ async function task() {
 
         setTimeout(() => {
           phase = PHASE.VALIDATE
-
-          console.log(
-            "réponse",
-            Array.from(answers.entries()).map(([name, answer]) => ({ name, answer }))
-          )
 
           parent.postMessage({
             type: "change-phase",

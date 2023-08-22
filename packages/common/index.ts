@@ -11,6 +11,7 @@ export const PHASE = {
 } as const
 
 export type Room = {
+  phase: keyof typeof PHASE
   code: string
   connections: Map<string, WebSocket>
   admin: string
