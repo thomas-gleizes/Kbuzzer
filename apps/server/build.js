@@ -1,4 +1,4 @@
-import esbuild from "esbuild"
+const esbuild = require("esbuild")
 
 void esbuild.build({
   entryPoints: ["src/app.ts", "src/workers/game.ts"],

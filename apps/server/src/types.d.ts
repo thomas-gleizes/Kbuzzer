@@ -7,3 +7,13 @@ declare type Room = {
   admin: string
   worker: Worker
 }
+
+declare type Player = {
+  name: string
+  score: number
+  connected: boolean
+}
+
+declare type Parameters = {
+  timeLimit: number
+}

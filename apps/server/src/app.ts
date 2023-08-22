@@ -7,7 +7,7 @@ import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
 
 import { generateRandomCode } from "./utils/generateRandomCode"
-import { APP_PORT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
+import { APP_PORT, SESSION_PLAYER_LIMIT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
 import { Room } from "./types"
 
 const app = fastify()
@@ -47,6 +47,8 @@ app.register(
 
       rooms.set(code, room)
 
+      console.log("room created", code, username)
+
       reply.status(201).send({ id: code, username })
     })
 
@@ -65,7 +67,14 @@ app.register(
 
       const room = rooms.get(roomId)!
 
+      if (room.connections.has(username))
+        return connection.socket.close(4003, "Username already taken")
+      if (room.connections.size >= SESSION_PLAYER_LIMIT)
+        return connection.socket.close(4006, "Session player limit reached")
+
       room.connections.set(username, connection.socket)
+
+      console.log("room joined", roomId, username, room.connections.keys())
 
       function broadcast(type: string, data: object) {
         for (const socket of Array.from(room.connections.values()))
@@ -78,17 +87,76 @@ app.register(
         console.log("Message from worker", message)
 
         switch (message.type) {
+          case "correct-answer":
+          case "no-correct-answer":
+          case "change-phase":
           case "player-list":
-            return broadcast(message.type, message.data)
+            return connection.socket.send(JSON.stringify(message))
+          case "new-answer": {
+            const index = message.data.answers.findIndex((answer: any) => answer.name === username)
+
+            console.log("Message.data", username, index, message.data.answers)
+
+            return connection.socket.send(
+              JSON.stringify({
+                type: message.type,
+                data: {
+                  total: message.data.answers.length,
+                  you: index >= 0 ? index : null,
+                },
+              })
+            )
+          }
         }
       })
 
       connection.socket.on("message", (buffer) => {
         const message = JSON.parse(buffer.toString())
 
-        console.log("message from socket", message)
+        switch (message.type) {
+          case "start-game":
+            if (username === room.admin) room.worker.postMessage({ type: "start-game", username })
+            break
+          case "answer":
+            room.worker.postMessage({
+              type: "answer",
+              username,
+              data: {
+                answer: message.data.answer,
+              },
+            })
+            break
+          case "skip-answer": {
+            if (username === room.admin) {
+              broadcast("skip-answer", {
+                answer: message.data.username,
+              })
+            }
 
-        room.worker.postMessage({ type: message.type, data: message.data })
+            break
+          }
+          case "validate-answer": {
+            if (username === room.admin) {
+              room.worker.postMessage({
+                type: "validate",
+                username,
+                data: {
+                  name: message.data.username,
+                },
+              })
+            }
+          }
+          case "change-parameters":
+            if (username === room.admin) {
+              room.worker.postMessage({
+                type: "change-parameters",
+                username,
+                data: {
+                  timeLimit: message.data.timeLimit,
+                },
+              })
+            }
+        }
       })
 
       connection.socket.on("close", () => {
@@ -111,7 +179,7 @@ app.register(
 
     return instance
   },
-  { prefix: "/api" },
+  { prefix: "/api" }
 )
 
 app
