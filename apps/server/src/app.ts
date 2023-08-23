@@ -1,60 +1,26 @@
 import path from "node:path"
+import { Worker } from "node:worker_threads"
 
 import { fastify } from "fastify"
 import fastifyCors from "@fastify/cors"
 import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
-import fastifySchedulePlugin from "@fastify/schedule"
 
-import dotenv from "dotenv"
-
+import type { Parameters, Room } from "@Kbuzzer/common"
 import { generateRandomCode } from "./utils/generateRandomCode"
-import { Room } from "./types"
-
-import { AsyncTask, CronJob } from "toad-scheduler"
+import { APP_PORT, SESSION_PLAYER_LIMIT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
+import { PHASE } from "@Kbuzzer/common"
 
 const app = fastify()
-
-dotenv.config({})
-
-const port: number = +(process.env.APP_PORT as string)
 
 app.register(fastifyCors, { origin: "*" })
 app.register(fastifyWebsocket)
 
-let rooms = new Map<string, Room>()
+const rooms = new Map<string, Room>()
 
 app
   .register(fastifyStatic, { root: path.join(__dirname, "client"), prefix: "/" })
   .setNotFoundHandler((req, reply) => void reply.sendFile("index.html"))
-
-app
-  .register(fastifySchedulePlugin)
-  .ready()
-  .then(() => {
-    const task = new AsyncTask(
-      "clear-rooms",
-      async () => {
-        for (const [key, room] of Array.from(rooms)) {
-          if (Date.now() - room.lastActivity > 1000 * 60 * 5) {
-            console.log(`Close inactive room {${key}} with {${room.connections.size}} connections`)
-
-            for (const socket of Array.from(room.connections.values()))
-              socket.close(4007, "La session à été fermé due à sont inactivité")
-
-            rooms.delete(key)
-          }
-        }
-      },
-      (err) => console.error("CRON JOB ERROR", err.name, err.message)
-    )
-
-    const clearRooms = new CronJob({ cronExpression: "*/5 * * * *" }, task, {
-      preventOverrun: true,
-    })
-
-    app.scheduler.addCronJob(clearRooms)
-  })
 
 app.register(
   async (instance) => {
@@ -68,18 +34,27 @@ app.register(
       else if (rooms.size > 10)
         return reply.status(400).send({ error: "Le nombre de session en cours est atteint !" })
 
+      // TODO : remove constante code
       const code = generateRandomCode(new Set(rooms.keys()))
 
-      rooms.set(code, {
-        connections: new Map(),
-        admin: request.body.username,
-        buzzed: null,
-        banBuzzed: null,
-        delay: 1000 * 10,
-        lastActivity: Date.now(),
-      })
+      const initialParameters: Parameters = {
+        timeLimit: 20,
+      }
 
-      console.log(`Room cretead {${code}} by {${username}}`)
+      const room: Room = {
+        code: code,
+        connections: new Map(),
+        admin: username,
+        worker: new Worker(`${WORKERS_DIRECTORY}/game.js`, {
+          workerData: { code, admin: username, initialParameters },
+        }),
+        phase: PHASE.INIT,
+        parameters: initialParameters,
+      }
+
+      rooms.set(code, room)
+
+      console.log("room created", code, username)
 
       reply.status(201).send({ id: code, username })
     })
@@ -91,98 +66,152 @@ app.register(
       const roomId = request.params.id
       const username = request.query.username
 
+      if (rooms.size >= SESSION_LIMIT) return connection.socket.close(4002, "Session limit reached")
       if (!roomId || !username) return connection.socket.close(4000, "Missing params")
       if (username.length > 20) return connection.socket.close(4004, "Username too long")
       if (username.length < 3) return connection.socket.close(4005, "Username too short")
       if (!rooms.has(roomId)) return connection.socket.close(4001, "Room not found")
 
-      const room = rooms.get(roomId) as Room
-
-      if (room.connections.size >= 10)
-        return connection.socket.close(4006, "Le nombre de participants max est atteint !")
-
-      const isRoomAdmin = room.admin === username
+      const room = rooms.get(roomId)!
 
       if (room.connections.has(username))
-        return connection.socket.close(4002, "le nom d'utilisateur est déjà pris")
-
-      console.log(`Connection established {${username}} to {${roomId}}`)
+        return connection.socket.close(4003, "Username already taken")
+      if (room.connections.size >= SESSION_PLAYER_LIMIT)
+        return connection.socket.close(4006, "Session player limit reached")
 
       room.connections.set(username, connection.socket)
-      room.lastActivity = Date.now()
 
-      function broadcast(message: any) {
+      console.log("room joined", roomId, username, room.connections.keys())
+
+      function broadcast(type: string, data: object) {
         for (const socket of Array.from(room.connections.values()))
-          socket.send(JSON.stringify(message))
+          socket.send(JSON.stringify({ type, data }))
       }
 
-      broadcast({ type: "list", users: Array.from(room.connections.keys()), admin: room.admin })
+      room.worker.postMessage({ type: "join", username })
+      connection.socket.send(
+        JSON.stringify({
+          type: "info",
+          data: { admin: room.admin, phase: room.phase, parameters: room.parameters },
+        }),
+      )
 
-      connection.socket.on("message", (buffer: Buffer) => {
-        const message = JSON.parse(buffer.toString()) as any
-        room.lastActivity = Date.now()
+      room.worker.on("message", (message) => {
+        console.log("Message from worker", message)
+
+        if (message.type === "change-phase") room.phase = message.data.phase
 
         switch (message.type) {
-          case "buzz":
-            if (room.buzzed === null && room.banBuzzed !== username) {
-              room.buzzed = username
+          case "correct-answer":
+          case "no-correct-answer":
+          case "change-phase":
+          case "player-list":
+            return connection.socket.send(JSON.stringify(message))
+          case "update-parameters":
+            room.parameters = message.data.parameters
+            return connection.socket.send(JSON.stringify(message))
+          case "new-answer": {
+            const index = message.data.answers.findIndex((answer: any) => answer.name === username)
 
-              broadcast({ type: "buzz", username, expireAt: Date.now() + room.delay })
+            console.log("Message.data", username, index, message.data.answers)
 
-              if (room.delay !== Infinity)
-                setTimeout(() => {
-                  if (room.buzzed === username) {
-                    room.buzzed = null
-                    room.banBuzzed = username
+            return connection.socket.send(
+              JSON.stringify({
+                type: message.type,
+                data: {
+                  total: message.data.answers.length,
+                  you: index >= 0 ? index : null,
+                },
+              }),
+            )
+          }
+        }
+      })
 
-                    connection.socket.send(
-                      JSON.stringify({ type: "ban", unBanAt: Date.now() + room.delay })
-                    )
+      connection.socket.on("message", (buffer) => {
+        const message = JSON.parse(buffer.toString())
 
-                    setTimeout(() => {
-                      if (room.banBuzzed === username) room.banBuzzed = null
-                    }, room.delay)
+        switch (message.type) {
+          case "start-game":
+            if (username === room.admin) room.worker.postMessage({ type: "start-game", username })
+            break
+          case "answer":
+            room.worker.postMessage({
+              type: "answer",
+              username,
+              data: {
+                answer: message.data.answer,
+              },
+            })
+            break
+          case "skip-answer": {
+            if (username === room.admin) {
+              console.log("SKIP")
 
-                    broadcast({ type: "clear" })
-                  }
-                }, room.delay)
+              broadcast("skip-answer", {
+                answer: message.data.username,
+              })
+            }
+
+            break
+          }
+          case "validate-answer": {
+            if (username === room.admin) {
+              room.worker.postMessage({
+                type: "validate",
+                username,
+                data: {
+                  name: message.data.username,
+                },
+              })
+            }
+          }
+          case "change-parameters":
+            if (username === room.admin) {
+              room.worker.postMessage({
+                type: "change-parameters",
+                username,
+                data: {
+                  timeLimit: message.data.timeLimit,
+                },
+              })
             }
             break
-          case "clear":
-            if (isRoomAdmin) {
-              room.buzzed = null
-              room.banBuzzed = null
+          case "close":
+            if (username === room.admin) {
+              for (const socket of Array.from(room.connections.values())) {
+                socket.close(4007, "the admin close the session")
+              }
 
-              broadcast({ type: "clear" })
+              rooms.delete(roomId)
+              room.worker.terminate()
             }
-            break
-          default:
             break
         }
       })
 
       connection.socket.on("close", () => {
         room.connections.delete(username)
-        if (room.buzzed === username) room.buzzed = null
-        if (room.banBuzzed === username) room.banBuzzed = null
-
-        console.log(`Connection closed {${username}} to {${roomId}}`)
+        room.worker.postMessage({ type: "leave", username })
 
         if (room.connections.size === 0) {
+          console.log("Room and Worker closed", roomId)
           rooms.delete(roomId)
-          console.log(`Room deleted {${roomId}}`)
-        } else {
-          broadcast({ type: "list", users: Array.from(room.connections.keys()) })
+          room.worker.terminate()
         }
       })
     })
 
+    instance.get("*", (request, reply) => {
+      return reply.status(404).send({ error: "Not found" })
+    })
+
     return instance
   },
-  { prefix: "/api" }
+  { prefix: "/api" },
 )
 
 app
-  .listen({ port })
-  .then((url) => console.log(`Server listening on ${url}`))
+  .listen({ port: APP_PORT })
+  .then((url) => console.log("server running ", url))
   .catch((err) => console.error("server crash", err))
