@@ -6,7 +6,7 @@ import fastifyCors from "@fastify/cors"
 import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
 
-import type { Room } from "@Kbuzzer/common"
+import type { Parameters, Room } from "@Kbuzzer/common"
 import { generateRandomCode } from "./utils/generateRandomCode"
 import { APP_PORT, SESSION_PLAYER_LIMIT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
 import { PHASE } from "@Kbuzzer/common"
@@ -37,14 +37,19 @@ app.register(
       // TODO : remove constante code
       const code = generateRandomCode(new Set(rooms.keys()))
 
+      const initialParameters: Parameters = {
+        timeLimit: 20,
+      }
+
       const room: Room = {
         code: code,
         connections: new Map(),
         admin: username,
         worker: new Worker(`${WORKERS_DIRECTORY}/game.js`, {
-          workerData: { code, admin: username },
+          workerData: { code, admin: username, initialParameters },
         }),
         phase: PHASE.INIT,
+        parameters: initialParameters,
       }
 
       rooms.set(code, room)
@@ -85,7 +90,10 @@ app.register(
 
       room.worker.postMessage({ type: "join", username })
       connection.socket.send(
-        JSON.stringify({ type: "info", data: { admin: room.admin, phase: room.phase } })
+        JSON.stringify({
+          type: "info",
+          data: { admin: room.admin, phase: room.phase, parameters: room.parameters },
+        }),
       )
 
       room.worker.on("message", (message) => {
@@ -99,7 +107,9 @@ app.register(
           case "change-phase":
           case "player-list":
             return connection.socket.send(JSON.stringify(message))
-
+          case "update-parameters":
+            room.parameters = message.data.parameters
+            return connection.socket.send(JSON.stringify(message))
           case "new-answer": {
             const index = message.data.answers.findIndex((answer: any) => answer.name === username)
 
@@ -112,7 +122,7 @@ app.register(
                   total: message.data.answers.length,
                   you: index >= 0 ? index : null,
                 },
-              })
+              }),
             )
           }
         }
@@ -136,6 +146,8 @@ app.register(
             break
           case "skip-answer": {
             if (username === room.admin) {
+              console.log("SKIP")
+
               broadcast("skip-answer", {
                 answer: message.data.username,
               })
@@ -156,8 +168,6 @@ app.register(
           }
           case "change-parameters":
             if (username === room.admin) {
-              console.log("new parameter", message.data)
-
               room.worker.postMessage({
                 type: "change-parameters",
                 username,
@@ -198,7 +208,7 @@ app.register(
 
     return instance
   },
-  { prefix: "/api" }
+  { prefix: "/api" },
 )
 
 app

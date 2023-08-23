@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useRef, useState } from "react"
+import React, { createContext, useContext, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { useMount } from "react-use"
 
-import { PHASE, Player } from "@Kbuzzer/common"
+import { Parameters, PHASE, Player } from "@Kbuzzer/common"
 
 const GlobalContext = createContext<{
   isAdmin: boolean
@@ -18,7 +18,11 @@ const GlobalContext = createContext<{
   phase: keyof typeof PHASE | undefined
   expireAt: number | null
   answers: Array<{ name: string; answer: string }> | null
-  prevAnswer: null | { success: true; answer: string; player: string } | { success: false }
+  prevAnswer:
+    | null
+    | { success: true; answer: string; player: string }
+    | { success: false; noAnswers: boolean }
+  parameters: Parameters
 }>({} as any)
 
 export const useGlobalContext = () => {
@@ -43,6 +47,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
   const [admin, setAdmin] = useState<string>()
   const [username, setUsername] = useState<string | null>(() => localStorage.getItem("username"))
   const [phase, setPhase] = useState<keyof typeof PHASE>()
+  const [parameters, setParameters] = useState<Parameters>({ timeLimit: 20 })
 
   const [expireAt, setExpireAt] = useState<number | null>(null)
   const [answers, setAnswers] = useState<Array<{ name: string; answer: string }> | null>(null)
@@ -51,10 +56,13 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
     | { success: true; answer: string; player: string }
     | {
         success: false
+        noAnswers: boolean
       }
   >(null)
 
   const listenersRef = useRef<Map<string, (data: any) => void>>(new Map())
+
+  useEffect(() => console.log("Parameters", parameters), [parameters])
 
   const connect = (roomId: string, username: string) => {
     const baseWSUrl = getWsUrl()
@@ -117,6 +125,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
 
       switch (data.phase) {
         case PHASE.ANSWER:
+          setAnswers([])
           setExpireAt(Date.now() + data.timeLimit * 1000)
           break
         case PHASE.VALIDATE:
@@ -124,7 +133,9 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
           setAnswers(data.answers)
           break
         case PHASE.RESULT:
-          setPlayers(data.players)
+          setExpireAt(null)
+          if (data.players) setPlayers(data.players)
+          if (data.noAnswers) setPrevAnswer({ success: false, noAnswers: true })
           break
         default:
           break
@@ -138,6 +149,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
     handleSocketMessage("info", (data) => {
       setPhase(data.phase)
       setAdmin(data.admin)
+      setParameters(data.parameters)
     })
 
     handleSocketMessage("correct-answer", (data) => {
@@ -145,7 +157,12 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
     })
 
     handleSocketMessage("no-correct-answer", () => {
-      setPrevAnswer({ success: false })
+      setPrevAnswer({ success: false, noAnswers: false })
+    })
+
+    handleSocketMessage("update-parameters", (data) => {
+      console.log("update-parameters", data)
+      setParameters(data.parameters)
     })
   })
 
@@ -165,6 +182,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
         expireAt,
         answers,
         prevAnswer,
+        parameters,
       }}
     >
       {children}

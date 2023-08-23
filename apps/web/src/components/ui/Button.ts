@@ -5,13 +5,14 @@ const buttonStyle = cva({
   base: {
     borderRadius: "4px",
     fontWeight: "bold",
-    transitionDuration: "100ms",
+    textAlign: "center",
+    cursor: "pointer",
+    transitionDuration: "200ms",
     shadow: "lg",
     _hover: {
       shadow: "xl",
       scale: "1.03",
     },
-    textAlign: "center",
   },
   variants: {
     visual: {
@@ -25,11 +26,13 @@ const buttonStyle = cva({
         borderWidth: "1px",
         borderColor: "purple.700",
         backgroundColor: "white",
+        color: "purple.700",
         _hover: {
           borderColor: "transparent",
           backgroundGradient: "to-bl",
           gradientFrom: "purple.700",
           gradientTo: "blue.700",
+          color: "white",
         },
       },
     },

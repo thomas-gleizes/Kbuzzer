@@ -1,10 +1,11 @@
 import React, { useState } from "react"
 
 import { useGlobalContext } from "context/global"
-import { Button } from "components/ui"
+import { Button, Card } from "components/ui"
+import { css } from "../../../styled-system/css"
 
 export const ValidateAdmin: Component = () => {
-  const { isAdmin, answers, sendMessage } = useGlobalContext()
+  const { isAdmin, answers, username, sendMessage } = useGlobalContext()
 
   const [index, setIndex] = useState(0)
 
@@ -12,7 +13,7 @@ export const ValidateAdmin: Component = () => {
 
   const handleSkip = () => {
     if (index + 1 < answers!.length) {
-      sendMessage("skip-anwser", { username: current!.name })
+      sendMessage("skip-answer", { username: current!.name })
       setIndex(index + 1)
     } else {
       sendMessage("validate-answer", { username: null })
@@ -25,13 +26,19 @@ export const ValidateAdmin: Component = () => {
 
   if (isAdmin)
     return (
-      <div>
-        {current && (
-          <div>
-            <span>{current.name}</span> à répondue <span> {current.answer}</span>
-          </div>
-        )}
+      <Card className={css({ w: "450px" })}>
         <div>
+          <h1 className={css({ fontSize: "2xl", mb: 5, textAlign: "center" })}>
+            C'est l'heure du jugement
+          </h1>
+        </div>
+        {current && (
+          <p className={css({ fontSize: "xl", textAlign: "center" })}>
+            <span className={css({ fontWeight: "semibold" })}>{current.name}</span> à répondue '
+            <span className={css({ fontWeight: "semibold" })}>{current.answer}</span>'
+          </p>
+        )}
+        <div className={css({ mt: "5", display: "flex", justifyContent: "space-between" })}>
           <Button onClick={handleSkip} type="button" visual="outline">
             Incorrect
           </Button>
@@ -39,7 +46,7 @@ export const ValidateAdmin: Component = () => {
             Correct (+1 point)
           </Button>
         </div>
-      </div>
+      </Card>
     )
 
   return <div></div>

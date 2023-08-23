@@ -48,7 +48,7 @@ const Content: Component = () => {
       <header className={styles.header}>
         <nav className={styles.nav}>
           <Link className={styles.link} to="/">
-            K'buzzer
+            K'Blind
           </Link>
         </nav>
         <div>

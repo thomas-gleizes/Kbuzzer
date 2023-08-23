@@ -16,6 +16,7 @@ export type Room = {
   connections: Map<string, WebSocket>
   admin: string
   worker: Worker
+  parameters: Parameters
 }
 
 export type Player = {

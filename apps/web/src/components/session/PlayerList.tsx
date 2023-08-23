@@ -1,7 +1,8 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo } from "react"
 
 import { useGlobalContext } from "context/global"
 import { css } from "styled-system/css"
+import { Card } from "components/ui"
 
 const styles = {
   container: css({
@@ -15,6 +16,7 @@ const styles = {
   h1: css({
     fontWeight: "semibold",
     fontSize: "2xl",
+    textAlign: "center",
   }),
   list: css({
     display: "flex",
@@ -37,21 +39,24 @@ const styles = {
 export const PlayerList: Component = () => {
   const { players, admin, username } = useGlobalContext()
 
-  useEffect(() => console.log("Players", players), [players])
+  const orderedPlayers = useMemo(() => {
+    return players.sort((a, b) => a.score - b.score).sort((a) => (a.connected ? -1 : 1))
+  }, [players])
 
   return (
-    <div className={styles.container}>
+    <Card className={css({ w: "400px" })}>
       <div>
         <h1 className={styles.h1}>Liste des participants</h1>
       </div>
       <div className={styles.list}>
-        {players.map((player, index) => (
+        {orderedPlayers.map((player, index) => (
           <div
             key={index}
             className={styles.item}
             style={{
               fontWeight: player.name === username ? "bold" : "normal",
               color: player.name === admin ? "red" : "black",
+              opacity: player.connected ? "100%" : "50%",
             }}
           >
             <span>{player.name}</span>
@@ -59,6 +64,6 @@ export const PlayerList: Component = () => {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   )
 }

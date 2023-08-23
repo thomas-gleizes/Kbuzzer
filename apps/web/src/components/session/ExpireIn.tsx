@@ -27,7 +27,7 @@ export const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
   const [initialTimestamp] = useState<number>(Date.now())
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       const now = Date.now()
 
       const diff = timestamp - now
@@ -37,7 +37,7 @@ export const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
       const initialDiff = timestamp - initialTimestamp
 
       setProgress((diff / initialDiff) * 100)
-    }, 10)
+    }, 50)
 
     return () => clearInterval(interval)
   }, [timestamp])
