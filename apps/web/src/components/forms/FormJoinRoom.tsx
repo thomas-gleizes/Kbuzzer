@@ -1,7 +1,11 @@
+import React from "react"
 import { SubmitHandler, useForm } from "react-hook-form"
-import { useGlobalContext } from "../../context/global"
-import { css } from "../../../styled-system/css"
 import { useSearchParams } from "react-router-dom"
+
+import { css } from "styled-system/css"
+import { center } from "styled-system/patterns"
+import { useGlobalContext } from "context/global"
+import { Button, Input, InputGroup, Label } from "components/ui"
 
 interface Values {
   username: string
@@ -14,39 +18,6 @@ const styles = {
     mb: 5,
     fontSize: "3xl",
     fontWeight: "semibold",
-  }),
-  input: css({
-    outline: "none",
-    px: 3,
-    py: 2,
-    fontSize: "lg",
-    rounded: "md",
-    borderWidth: "2px",
-    borderColor: "purple.500",
-    _active: { borderWidth: "2px" },
-  }),
-  container: css({
-    display: "flex",
-    flexDir: "column",
-    mb: "2",
-  }),
-  button: css({
-    backgroundGradient: "to-bl",
-    gradientFrom: "purple.700",
-    gradientTo: "blue.700",
-    color: "white",
-    fontSize: "xl",
-    rounded: "lg",
-    shadow: "lg",
-    w: "full",
-    py: 1,
-    my: 2,
-    cursor: "pointer",
-    transitionDuration: "100ms",
-    _hover: {
-      shadow: "xl",
-      scale: "1.05",
-    },
   }),
 }
 
@@ -66,20 +37,18 @@ export const FormJoinRoom = () => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <h1 className={styles.heading}>Rejoindre une session</h1>
 
-      <div className={styles.container}>
-        <label>Code session : </label>
-        <input {...register("code")} type="text" className={styles.input} />
-      </div>
+      <InputGroup>
+        <Label>Code session : </Label>
+        <Input {...register("code")} type="text" />
+      </InputGroup>
 
-      <div className={styles.container}>
-        <label>Nom : </label>
-        <input {...register("username")} type="text" className={styles.input} />
-      </div>
+      <InputGroup>
+        <Label>Nom : </Label>
+        <Input {...register("username")} type="text" />
+      </InputGroup>
 
-      <div>
-        <button type="submit" className={styles.button}>
-          Rejoindre la session
-        </button>
+      <div className={center()}>
+        <Button type="submit">Rejoindre la session</Button>
       </div>
     </form>
   )

@@ -1,5 +1,6 @@
-import { useGlobalContext } from "../../context/global"
-import { ChangeEvent, ChangeEventHandler, FocusEventHandler, useState } from "react"
+import { ChangeEventHandler, FocusEventHandler, useState } from "react"
+
+import { useGlobalContext } from "context/global"
 
 export const Parameters: Component = () => {
   const { isAdmin, sendMessage } = useGlobalContext()

@@ -1,8 +1,9 @@
-import { css } from "../../../styled-system/css"
 import { useState } from "react"
-import { useGlobalContext } from "../../context/global"
 import { useEvent, useMount } from "react-use"
-import { ExpireIn } from "./ExpireIn"
+
+import { css } from "styled-system/css"
+import { useGlobalContext } from "context/global"
+import { ExpireIn } from "components/session/ExpireIn"
 
 const styles = {
   input: css({

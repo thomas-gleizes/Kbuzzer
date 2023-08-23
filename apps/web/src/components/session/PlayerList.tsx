@@ -1,7 +1,7 @@
 import React from "react"
 
-import { useGlobalContext } from "../../context/global"
-import { css } from "../../../styled-system/css"
+import { useGlobalContext } from "context/global"
+import { css } from "styled-system/css"
 
 const styles = {
   container: css({

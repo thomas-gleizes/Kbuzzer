@@ -1,8 +1,12 @@
-import { SubmitHandler, useForm } from "react-hook-form"
-import { api } from "../../utils/api"
-import { css } from "../../../styled-system/css"
-import { useGlobalContext } from "../../context/global"
+import React from "react"
 import { toast } from "react-toastify"
+import { SubmitHandler, useForm } from "react-hook-form"
+
+import { center } from "styled-system/patterns"
+import { css } from "styled-system/css"
+import { api } from "utils/api"
+import { useGlobalContext } from "context/global"
+import { Button, Input, InputGroup, Label } from "components/ui"
 
 interface Values {
   username: string
@@ -14,39 +18,6 @@ const styles = {
     mb: 5,
     fontSize: "3xl",
     fontWeight: "semibold",
-  }),
-  input: css({
-    outline: "none",
-    px: 3,
-    py: 2,
-    fontSize: "lg",
-    rounded: "md",
-    borderWidth: "2px",
-    borderColor: "purple.500",
-    _active: { borderWidth: "2px" },
-  }),
-  button: css({
-    backgroundGradient: "to-bl",
-    gradientFrom: "purple.700",
-    gradientTo: "blue.700",
-    color: "white",
-    fontSize: "xl",
-    rounded: "lg",
-    shadow: "lg",
-    w: "full",
-    py: 1,
-    my: 2,
-    cursor: "pointer",
-    transitionDuration: "100ms",
-    _hover: {
-      shadow: "xl",
-      scale: "1.05",
-    },
-  }),
-  container: css({
-    display: "flex",
-    flexDir: "column",
-    mb: "2",
   }),
 }
 
@@ -76,14 +47,13 @@ export const FormCreateRoom: Component = () => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <h1 className={styles.heading}>Crée une session</h1>
 
-      <div className={styles.container}>
-        <label>Nom : </label>
-        <input {...register("username")} type="text" className={styles.input} />
-      </div>
-      <div>
-        <button type="submit" className={styles.button}>
-          Crée la session
-        </button>
+      <InputGroup>
+        <Label>Nom : </Label>
+        <Input {...register("username")} type="text" />
+      </InputGroup>
+
+      <div className={center({ py: 2 })}>
+        <Button type="submit">Crée la session</Button>
       </div>
     </form>
   )

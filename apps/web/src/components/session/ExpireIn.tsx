@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
-import { css } from "../../../styled-system/css"
+
+import { css } from "styled-system/css"
 
 const styles = {
   progressBarContainer: css({
@@ -40,13 +41,6 @@ export const ExpireIn: React.FC<{ timestamp: number }> = ({ timestamp }) => {
 
     return () => clearInterval(interval)
   }, [timestamp])
-
-  useEffect(() => {
-    console.log(
-      "New Date(timestamp).toLocaleTimeString()",
-      new Date(timestamp).toLocaleTimeString(),
-    )
-  }, [])
 
   return (
     <div className={styles.progressBarContainer}>

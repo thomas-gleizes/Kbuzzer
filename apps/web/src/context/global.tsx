@@ -20,7 +20,13 @@ const GlobalContext = createContext<{
   answers: Array<{ name: string; answer: string }> | null
 }>({} as any)
 
-export const useGlobalContext = () => useContext(GlobalContext)
+export const useGlobalContext = () => {
+  const values = useContext(GlobalContext)
+
+  if (!values) throw new Error("useGlobalContext must be used within a GlobalContextProvider")
+
+  return values
+}
 
 function getWsUrl() {
   if (document.location.protocol.includes("https")) return `wss://${document.location.host}/api`
@@ -124,8 +130,6 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
       setAdmin(data.admin)
     })
   })
-
-  console.log("Answers", answers)
 
   return (
     <GlobalContext.Provider

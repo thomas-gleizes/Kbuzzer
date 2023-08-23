@@ -1,5 +1,6 @@
-import { useGlobalContext } from "../../context/global"
 import { useState } from "react"
+
+import { useGlobalContext } from "context/global"
 
 const ValidateAdmin: Component = () => {
   const { isAdmin, answers } = useGlobalContext()
