@@ -26,17 +26,12 @@ async function task() {
 
   let answers: Map<string, string>
 
-  console.log("worker created", code, admin)
-
   parent.on("message", (message) => {
     const { type, username, data } = message
-    console.log("message from server", type, username, data)
 
     switch (message.type) {
       case "join":
         if (phase === PHASE.FINISH) break
-
-        console.log("player join the game", username)
 
         if (players.has(message.username)) players.get(message.username)!.connected = true
         else players.set(message.username, { name: message.username, score: 0, connected: true })
@@ -44,8 +39,6 @@ async function task() {
         sendPlayer(players.values())
         break
       case "leave":
-        console.log("player leave the game", username)
-
         players.delete(message.username)
 
         if (players.size === 0) {
@@ -54,9 +47,7 @@ async function task() {
 
         break
       case "start-game":
-        console.log("Phase", phase)
         if (!(phase === PHASE.INIT || PHASE.RESULT) && username === admin) {
-          console.log("Break")
           break
         }
 
@@ -67,8 +58,6 @@ async function task() {
           type: "change-phase",
           data: { phase, timeLimit: parameters.timeLimit },
         })
-
-        console.log("Parameters.timeLimit", parameters.timeLimit)
 
         setTimeout(() => {
           phase = PHASE.VALIDATE
@@ -106,7 +95,10 @@ async function task() {
 
           parent.postMessage({
             type: "correct-answer",
-            data: { player: data.name, answer: answers.get(data.name)! },
+            data: {
+              player: data.name,
+              answer: answers.get(data.name)!,
+            },
           })
         } else {
           parent.postMessage({
@@ -140,16 +132,6 @@ async function task() {
         break
     }
   })
-
-  parent.on("close", () => {
-    console.log("Worker close")
-  })
-
-  let running = true
-
-  while (true) {
-    await new Promise((resolve) => setTimeout(resolve, 10))
-  }
 }
 
 task().catch((err) => {

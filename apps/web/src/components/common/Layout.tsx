@@ -13,6 +13,9 @@ const styles = {
     gradientFrom: "blue.700",
     gradientTo: "purple.700",
     px: 8,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   }),
   nav: css({
     display: "flex",
@@ -20,7 +23,7 @@ const styles = {
     h: "full",
   }),
   link: css({ color: "white", fontSize: "2xl", fontWeight: "bold" }),
-  main: css({ h: "calc(100vh - 48px)", bg: "gray.200" }),
+  main: css({ h: "calc(100vh - 48px)", bg: "gray.200", p: 5 }),
 }
 
 export const Layout: Component = () => {
@@ -50,7 +53,9 @@ const Content: Component = () => {
         </nav>
         <div>
           {context.status === WebSocket.OPEN && (
-            <Button onClick={handleDisconnect}>Disconnect</Button>
+            <Button onClick={handleDisconnect} visual="outline">
+              Disconnect
+            </Button>
           )}
         </div>
       </header>

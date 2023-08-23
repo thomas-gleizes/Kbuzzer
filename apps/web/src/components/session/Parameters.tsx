@@ -1,6 +1,7 @@
-import { ChangeEventHandler, FocusEventHandler, useState } from "react"
+import React, { ChangeEventHandler, FocusEventHandler, useState } from "react"
 
 import { useGlobalContext } from "context/global"
+import { Button, Card, Input, InputGroup, Label } from "components/ui"
 
 export const Parameters: Component = () => {
   const { isAdmin, sendMessage } = useGlobalContext()
@@ -20,18 +21,18 @@ export const Parameters: Component = () => {
   }
 
   return (
-    <div>
-      <div>
-        <label>Limit de temps</label>
-        <input
+    <Card>
+      <InputGroup>
+        <Label>Limit de temps</Label>
+        <Input
           value={values.timeLimit}
           name="timeLimit"
           onChange={handleChange}
           onBlur={handleBlur}
         />
-      </div>
+      </InputGroup>
 
-      <button onClick={handleSubmit}>Enregistrer</button>
-    </div>
+      <Button onClick={handleSubmit}>Enregistrer</Button>
+    </Card>
   )
 }

@@ -85,7 +85,7 @@ app.register(
 
       room.worker.postMessage({ type: "join", username })
       connection.socket.send(
-        JSON.stringify({ type: "info", data: { admin: room.admin, phase: room.phase } }),
+        JSON.stringify({ type: "info", data: { admin: room.admin, phase: room.phase } })
       )
 
       room.worker.on("message", (message) => {
@@ -112,7 +112,7 @@ app.register(
                   total: message.data.answers.length,
                   you: index >= 0 ? index : null,
                 },
-              }),
+              })
             )
           }
         }
@@ -166,17 +166,26 @@ app.register(
                 },
               })
             }
+            break
+          case "close":
+            if (username === room.admin) {
+              for (const socket of Array.from(room.connections.values())) {
+                socket.close(4007, "the admin close the session")
+              }
+
+              rooms.delete(roomId)
+              room.worker.terminate()
+            }
+            break
         }
       })
 
       connection.socket.on("close", () => {
-        console.log("close")
-
         room.connections.delete(username)
         room.worker.postMessage({ type: "leave", username })
 
         if (room.connections.size === 0) {
-          console.log("Room Deleted", roomId)
+          console.log("Room and Worker closed", roomId)
           rooms.delete(roomId)
           room.worker.terminate()
         }
@@ -189,7 +198,7 @@ app.register(
 
     return instance
   },
-  { prefix: "/api" },
+  { prefix: "/api" }
 )
 
 app

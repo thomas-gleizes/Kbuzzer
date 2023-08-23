@@ -24,6 +24,7 @@ const buttonStyle = cva({
       outline: {
         borderWidth: "1px",
         borderColor: "purple.700",
+        backgroundColor: "white",
         _hover: {
           borderColor: "transparent",
           backgroundGradient: "to-bl",

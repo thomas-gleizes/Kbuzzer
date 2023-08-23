@@ -7,6 +7,9 @@ import { PlayerList } from "components/session/PlayerList"
 import { Parameters } from "components/session/Parameters"
 import { Answer } from "components/session/Answer"
 import { Button } from "components/ui"
+import { ValidateAdmin } from "components/session/ValidateAdmin"
+import { Result } from "components/session/Result"
+import { DisplayerAnswers } from "components/session/DisplayerAnswers"
 
 export const Session: Component = () => {
   const { status, username, phase, isAdmin, connect, disconnect, sendMessage } = useGlobalContext()
@@ -43,11 +46,15 @@ export const Session: Component = () => {
         {isAdmin && (phase === PHASE.INIT || phase === PHASE.RESULT) ? (
           <>
             <Parameters />
-            <Button onClick={handleStart}>Commencé</Button>
+            <Button onClick={handleStart}>
+              {phase === PHASE.INIT ? "Commencé" : "Prochain round"}
+            </Button>
           </>
         ) : null}
 
         {phase === PHASE.ANSWER && <Answer />}
+        {phase === PHASE.VALIDATE && (isAdmin ? <ValidateAdmin /> : <DisplayerAnswers />)}
+        {phase === PHASE.RESULT && <Result />}
 
         <Button onClick={handleDisconnect} visual="outline">
           Disconnect

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 
 import { useGlobalContext } from "context/global"
 import { css } from "styled-system/css"
@@ -37,7 +37,7 @@ const styles = {
 export const PlayerList: Component = () => {
   const { players, admin, username } = useGlobalContext()
 
-  console.log("Admin", admin, username)
+  useEffect(() => console.log("Players", players), [players])
 
   return (
     <div className={styles.container}>

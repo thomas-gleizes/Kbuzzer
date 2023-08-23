@@ -1,9 +1,10 @@
-import { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useEvent, useMount } from "react-use"
 
 import { css } from "styled-system/css"
 import { useGlobalContext } from "context/global"
 import { ExpireIn } from "components/session/ExpireIn"
+import { Button, Input, InputGroup } from "components/ui"
 
 const styles = {
   input: css({
@@ -16,10 +17,16 @@ export const Answer: Component = () => {
   const { sendMessage, handleSocketMessage, expireAt } = useGlobalContext()
 
   const [value, setValue] = useState("")
-  const [statics, setStatics] = useState({ total: 0, you: 0 })
+  const [statics, setStatics] = useState<{ total: number; you: number | null }>({
+    total: 0,
+    you: null,
+  })
 
   const handleValid = () => {
-    if (value !== "") sendMessage("answer", { answer: value })
+    if (value !== "") {
+      sendMessage("answer", { answer: value })
+      setValue("")
+    }
   }
 
   useEvent("keydown", (event) => {
@@ -28,24 +35,25 @@ export const Answer: Component = () => {
 
   useMount(() => {
     handleSocketMessage("new-answer", (data: any) => {
-      console.log("Data", data)
-
       setStatics({ total: data.total, you: data.you })
     })
   })
-
-  console.log("Statics", statics)
 
   return (
     <div>
       {expireAt && <ExpireIn timestamp={expireAt} />}
       <div>
-        <div>
-          Réponse: {statics.total} - Position: {statics.you}
-        </div>
+        <div>Réponse: {statics.total}</div>
+        {statics.you !== null && <div> Position: {statics.you + 1}</div>}
 
-        <input value={value} onChange={(e) => setValue(e.target.value)} className={styles.input} />
-        <button onClick={handleValid}>Validé</button>
+        <InputGroup>
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className={styles.input}
+          />
+          <Button onClick={handleValid}>Validé</Button>
+        </InputGroup>
       </div>
     </div>
   )

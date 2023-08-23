@@ -18,6 +18,7 @@ const GlobalContext = createContext<{
   phase: keyof typeof PHASE | undefined
   expireAt: number | null
   answers: Array<{ name: string; answer: string }> | null
+  prevAnswer: null | { success: true; answer: string; player: string } | { success: false }
 }>({} as any)
 
 export const useGlobalContext = () => {
@@ -45,6 +46,13 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
 
   const [expireAt, setExpireAt] = useState<number | null>(null)
   const [answers, setAnswers] = useState<Array<{ name: string; answer: string }> | null>(null)
+  const [prevAnswer, setPrevAnswer] = useState<
+    | null
+    | { success: true; answer: string; player: string }
+    | {
+        success: false
+      }
+  >(null)
 
   const listenersRef = useRef<Map<string, (data: any) => void>>(new Map())
 
@@ -111,23 +119,33 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
         case PHASE.ANSWER:
           setExpireAt(Date.now() + data.timeLimit * 1000)
           break
-        case PHASE.RESULT:
-          break
         case PHASE.VALIDATE:
           setExpireAt(null)
           setAnswers(data.answers)
+          break
+        case PHASE.RESULT:
+          setPlayers(data.players)
+          break
+        default:
+          break
       }
     })
 
     handleSocketMessage("player-list", (data) => {
-      console.log("Data", data)
-
       setPlayers(data)
     })
 
     handleSocketMessage("info", (data) => {
       setPhase(data.phase)
       setAdmin(data.admin)
+    })
+
+    handleSocketMessage("correct-answer", (data) => {
+      setPrevAnswer({ success: true, player: data.player, answer: data.answer })
+    })
+
+    handleSocketMessage("no-correct-answer", () => {
+      setPrevAnswer({ success: false })
     })
   })
 
@@ -146,6 +164,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
         phase,
         expireAt,
         answers,
+        prevAnswer,
       }}
     >
       {children}
