@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { PHASE } from "@Kbuzzer/common"
+import { PHASE } from "@kbuzzer/common"
 import { Container, Stack } from "styled-system/jsx"
 import { useGlobalContext } from "context/global"
 import { PlayerList } from "components/session/PlayerList"

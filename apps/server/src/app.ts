@@ -6,10 +6,10 @@ import fastifyCors from "@fastify/cors"
 import fastifyWebsocket from "@fastify/websocket"
 import fastifyStatic from "@fastify/static"
 
-import type { Parameters, Room } from "@Kbuzzer/common"
+import type { Parameters, Room } from "@kbuzzer/common"
+import { PHASE } from "@kbuzzer/common"
 import { generateRandomCode } from "./utils/generateRandomCode"
 import { APP_PORT, SESSION_PLAYER_LIMIT, SESSION_LIMIT, WORKERS_DIRECTORY } from "./utils/constants"
-import { PHASE } from "@Kbuzzer/common"
 
 const app = fastify()
 
@@ -93,7 +93,7 @@ app.register(
         JSON.stringify({
           type: "info",
           data: { admin: room.admin, phase: room.phase, parameters: room.parameters },
-        }),
+        })
       )
 
       room.worker.on("message", (message) => {
@@ -122,7 +122,7 @@ app.register(
                   total: message.data.answers.length,
                   you: index >= 0 ? index : null,
                 },
-              }),
+              })
             )
           }
         }
@@ -187,6 +187,29 @@ app.register(
               room.worker.terminate()
             }
             break
+          case "video-seek": {
+            if (username === room.admin) {
+              broadcast("video-seek", {
+                time: message.data.time,
+              })
+            }
+            break
+          }
+          case "video-play": {
+            if (username === room.admin) {
+              broadcast("video-play", {
+                time: message.data.time,
+              })
+            }
+          }
+          case "video-pause": {
+            if (username === room.admin) {
+              broadcast("video-pause", {
+                time: message.data.time,
+              })
+            }
+            break
+          }
         }
       })
 
@@ -208,7 +231,7 @@ app.register(
 
     return instance
   },
-  { prefix: "/api" },
+  { prefix: "/api" }
 )
 
 app
