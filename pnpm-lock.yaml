@@ -23,9 +23,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@Kbuzzer/common':
-        specifier: workspace:*
-        version: link:../../packages/common
       '@fastify/cors':
         specifier: ^8.3.0
         version: 8.3.0
@@ -38,6 +35,9 @@ importers:
       '@fastify/websocket':
         specifier: ^8.1.0
         version: 8.1.0
+      '@kbuzzer/common':
+        specifier: workspace:*
+        version: link:../../packages/common
       croner:
         specifier: ^6.0.6
         version: 6.0.6
@@ -66,7 +66,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@Kbuzzer/common':
+      '@kbuzzer/common':
         specifier: workspace:*
         version: link:../../packages/common
       classnames:

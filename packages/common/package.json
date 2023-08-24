@@ -1,5 +1,5 @@
 {
-  "name": "@Kbuzzer/common",
+  "name": "@kbuzzer/common",
   "main": "index.ts",
   "types": "index.d.ts",
   "version": "1.0.0",
