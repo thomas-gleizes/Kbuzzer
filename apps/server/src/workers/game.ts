@@ -7,7 +7,7 @@ if (!parentPort) throw new Error("This file can only be run as a worker")
 if (!workerData) throw new Error("This file can only be run as a worker")
 
 const parent = parentPort
-const { code, admin, initialParameters } = workerData
+const { admin, initialParameters } = workerData
 
 function sendPlayer(players: IterableIterator<Player>) {
   parent.postMessage({
@@ -25,7 +25,9 @@ async function task() {
   let answers: Map<string, string>
 
   parent.on("message", (message) => {
-    const { type, username, data } = message
+    const { username, data } = message
+
+    console.log("WORKER : ", data)
 
     switch (message.type) {
       case "join":
@@ -57,9 +59,11 @@ async function task() {
           data: { phase, timeLimit: parameters.timeLimit },
         })
 
-        console.log("Timeout", parameters.timeLimit)
+        console.log("timeout", parameters.timeLimit)
 
         setTimeout(() => {
+          console.log("timeout end")
+
           if (answers.size === 0) {
             phase = PHASE.RESULT
 
@@ -78,7 +82,7 @@ async function task() {
               },
             })
           }
-        }, parameters.timeLimit * 1000)
+        }, (parameters.timeLimit || 15) * 1000)
         break
       case "answer": {
         if (phase !== PHASE.ANSWER) break

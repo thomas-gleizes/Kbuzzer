@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-
-import { useGlobalContext } from "context/global"
-import { Button, Card } from "components/ui"
-import { Center, Container } from "../../../styled-system/jsx"
-import { css } from "../../../styled-system/css"
+import React, { useEffect, useMemo, useState } from "react"
 import { BeatLoader } from "react-spinners"
-import { ExpireIn } from "components/session/ExpireIn"
+
+import { Center } from "styled-system/jsx"
+import { css } from "styled-system/css"
+import { Button, Card } from "components/ui"
+import { useGlobalContext } from "context/global"
 
 const DateFromNow: Component<{ timestamp: number }> = ({ timestamp }) => {
   const initTimestamp = useMemo(() => timestamp, [])
@@ -29,38 +28,17 @@ export const Result: Component = () => {
   if (!prevAnswer) return null
 
   const handleStart = () => {
-    sendMessage("start-game", {})
+    console.log("STATING")
+
+    if (isAdmin) sendMessage("start-game", {})
   }
 
   const otherAnswer = answers
     ? answers.filter(
         (a) =>
-          !prevAnswer ||
-          !prevAnswer.success ||
-          (prevAnswer.success && a.name !== prevAnswer.player),
+          !prevAnswer || !prevAnswer.success || (prevAnswer.success && a.name !== prevAnswer.player)
       )
     : []
-
-  const [timeout, setTimeout] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (isAdmin) {
-      const timeout = window.setTimeout(() => handleStart(), parameters.timeLimit * 1000 + 1000)
-
-      setTimeout(timeout)
-
-      return () => {
-        handleClearTimeout()
-      }
-    }
-  }, [])
-
-  const handleClearTimeout = () => {
-    if (typeof timeout === "number" && isAdmin) {
-      clearInterval(timeout)
-      setTimeout(null)
-    }
-  }
 
   return (
     <Card className={css({ w: "500px" })}>
@@ -97,22 +75,21 @@ export const Result: Component = () => {
       <Center className={css({ mb: "5" })}>
         <BeatLoader color="purple" />
       </Center>
-      {timeout && (
-        <div>
-          <p>
-            Lancement automatique dans{" "}
-            <DateFromNow timestamp={timestamp + parameters.timeLimit * 1000} /> seconde(s)
-          </p>
-          <ExpireIn timestamp={timestamp + parameters.timeLimit * 1000} />
-        </div>
-      )}
+      {/*{(*/}
+      {/*  <div>*/}
+      {/*    <p>*/}
+      {/*      Lancement automatique dans{" "}*/}
+      {/*      <DateFromNow timestamp={timestamp + parameters.timeLimit * 1000} /> seconde(s)*/}
+      {/*    </p>*/}
+      {/*    <ExpireIn timestamp={timestamp + parameters.timeLimit * 1000} />*/}
+      {/*  </div>*/}
+      {/*)}*/}
       {isAdmin && (
         <Center
           className={css({ mt: "5", display: "flex", justifyContent: "space-evenly", w: "full" })}
         >
-          <Button onClick={handleStart}>C'est reparti</Button>
-          <Button visual="outline" onClick={handleClearTimeout}>
-            Pause
+          <Button type="button" onClick={handleStart}>
+            C'est reparti
           </Button>
         </Center>
       )}

@@ -64,7 +64,9 @@ export const Answer: Component = () => {
             onChange={(e) => setValue(e.target.value)}
             className={styles.input}
           />
-          <Button onClick={handleValid}>Validé</Button>
+          <Button type="button" onClick={handleValid}>
+            Validé
+          </Button>
         </div>
       </div>
     </Card>

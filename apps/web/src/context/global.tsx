@@ -63,6 +63,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
   const listenersRef = useRef<Map<string, (data: any) => void>>(new Map())
 
   useEffect(() => console.log("Parameters", parameters), [parameters])
+  useEffect(() => console.log("Phase", phase), [phase])
 
   const connect = (roomId: string, username: string) => {
     const baseWSUrl = getWsUrl()
@@ -126,7 +127,7 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
       switch (data.phase) {
         case PHASE.ANSWER:
           setAnswers([])
-          setExpireAt(Date.now() + data.timeLimit * 1000)
+          setExpireAt(Date.now() + parameters.timeLimit * 1000)
           break
         case PHASE.VALIDATE:
           setExpireAt(null)
@@ -147,6 +148,8 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
     })
 
     handleSocketMessage("info", (data) => {
+      console.log("Data", data)
+
       setPhase(data.phase)
       setAdmin(data.admin)
       setParameters(data.parameters)
@@ -162,7 +165,9 @@ export const GlobalContextProvider: ComponentWithChildren = ({ children }) => {
 
     handleSocketMessage("update-parameters", (data) => {
       console.log("update-parameters", data)
-      setParameters(data.parameters)
+      setParameters({
+        timeLimit: data.parameters.timeLimit || 15,
+      })
     })
   })
 

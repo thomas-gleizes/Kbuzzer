@@ -53,7 +53,7 @@ const Content: Component = () => {
         </nav>
         <div>
           {context.status === WebSocket.OPEN && (
-            <Button onClick={handleDisconnect} visual="outline">
+            <Button type="button" onClick={handleDisconnect} visual="outline">
               Disconnect
             </Button>
           )}

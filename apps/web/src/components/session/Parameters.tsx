@@ -26,9 +26,9 @@ export const Parameters: Component = () => {
     setValues({ ...values, [event.target.name]: event.target.value })
   }
 
-  const handleBlur: FocusEventHandler<HTMLInputElement> = (event) => {
-    sendMessage("change-parameters", { [event.target.name]: event.target.value })
-  }
+  // const handleBlur: FocusEventHandler<HTMLInputElement> = (event) => {
+  //   sendMessage("change-parameters", { [event.target.name]: event.target.value })
+  // }
 
   return (
     <Card className={css({ w: "400px" })}>
@@ -44,12 +44,14 @@ export const Parameters: Component = () => {
           value={values.timeLimit}
           name="timeLimit"
           onChange={handleChange}
-          onBlur={handleBlur}
+          // onBlur={handleBlur}
         />
       </InputGroup>
 
       <div className={center({ mt: 4 })}>
-        <Button onClick={handleSubmit}>Enregistrer</Button>
+        <Button type="button" onClick={handleSubmit}>
+          Enregistrer
+        </Button>
       </div>
     </Card>
   )

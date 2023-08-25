@@ -23,7 +23,9 @@ export const Waiting: Component = () => {
       </Center>
       {isAdmin && (
         <Center>
-          <Button onClick={handleStart}>C'est parti</Button>
+          <Button type="button" onClick={handleStart}>
+            C'est parti
+          </Button>
         </Center>
       )}
     </Card>

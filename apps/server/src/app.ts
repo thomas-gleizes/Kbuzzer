@@ -97,8 +97,6 @@ app.register(
       )
 
       room.worker.on("message", (message) => {
-        console.log("Message from worker", message)
-
         if (message.type === "change-phase") room.phase = message.data.phase
 
         switch (message.type) {
@@ -112,8 +110,6 @@ app.register(
             return connection.socket.send(JSON.stringify(message))
           case "new-answer": {
             const index = message.data.answers.findIndex((answer: any) => answer.name === username)
-
-            console.log("Message.data", username, index, message.data.answers)
 
             return connection.socket.send(
               JSON.stringify({
@@ -131,6 +127,8 @@ app.register(
       connection.socket.on("message", (buffer) => {
         const message = JSON.parse(buffer.toString())
 
+        console.log("Message.from", message)
+
         switch (message.type) {
           case "start-game":
             if (username === room.admin) room.worker.postMessage({ type: "start-game", username })
@@ -146,8 +144,6 @@ app.register(
             break
           case "skip-answer": {
             if (username === room.admin) {
-              console.log("SKIP")
-
               broadcast("skip-answer", {
                 answer: message.data.username,
               })
