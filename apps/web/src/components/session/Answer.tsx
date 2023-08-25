@@ -43,7 +43,7 @@ export const Answer: Component = () => {
   })
 
   useMount(() => {
-    const element: HTMLInputElement = document.querySelector("#input")
+    const element: HTMLInputElement | null = document.querySelector("#input")
     if (element) element.focus()
   })
 
