@@ -6,7 +6,7 @@ import { Card } from "components/ui"
 import { css } from "styled-system/css"
 
 export const DisplayerAnswers: Component = () => {
-  const { admin, answers, handleSocketMessage } = useGlobalContext()
+  const { answers, handleSocketMessage } = useGlobalContext()
 
   const [index, setIndex] = useState(0)
 
@@ -14,8 +14,6 @@ export const DisplayerAnswers: Component = () => {
 
   useMount(() => {
     handleSocketMessage("skip-answer", () => {
-      console.log("RECEIVED SKIP")
-
       setIndex((prevState) => prevState + 1)
     })
   })

@@ -45,20 +45,20 @@ export const Answer: Component = () => {
   return (
     <Card>
       {expireAt && <ExpireIn timestamp={expireAt} />}
-      <div>
+      <div className={css({ mt: 2 })}>
         <div className={css({ fontSize: "lg" })}>
           <span className={css({ fontWeight: "semibold" })}>{statics.total}</span> participant(s)
           ont répondue sur {players.length}
         </div>
         {statics.you !== null ? (
-          <div>
+          <div className={css({ mt: 2 })}>
             Vous avec répondue: '{prevValue}', Votre position est {statics.you + 1}
           </div>
         ) : (
-          <div>Vous n'avez pas encore répondue</div>
+          <div className={css({ mt: 2 })}>Vous n'avez pas encore répondue</div>
         )}
 
-        <div>
+        <div className={css({ mt: 2 })}>
           <Input
             value={value}
             onChange={(e) => setValue(e.target.value)}

@@ -1,7 +1,8 @@
 import React, { useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, Navigate } from "react-router-dom"
 
-import { PHASE } from "@Kbuzzer/common"
+import { PHASE } from "@kbuzzer/common"
+import { css } from "styled-system/css"
 import { Container, Stack } from "styled-system/jsx"
 import { useGlobalContext } from "context/global"
 import { PlayerList } from "components/session/PlayerList"
@@ -10,11 +11,10 @@ import { Answer } from "components/session/Answer"
 import { ValidateAdmin } from "components/session/ValidateAdmin"
 import { Result } from "components/session/Result"
 import { DisplayerAnswers } from "components/session/DisplayerAnswers"
-import { css } from "../../styled-system/css"
 import { Waiting } from "components/session/Waiting"
 
 export const Session: Component = () => {
-  const { status, username, phase, isAdmin, connect, disconnect, sendMessage } = useGlobalContext()
+  const { status, username, phase, isAdmin, connect } = useGlobalContext()
 
   const { id } = useParams()
   const navigate = useNavigate()
@@ -28,7 +28,7 @@ export const Session: Component = () => {
   }, [])
 
   if (status === WebSocket.CONNECTING) return <div>En cours de connection</div>
-  if (status === WebSocket.CLOSED || status === WebSocket.CLOSING) return <div> Disconnected </div>
+  if (status === WebSocket.CLOSED || status === WebSocket.CLOSING) return <Navigate to="/" />
 
   return (
     <div className={css({ display: "flex", alignItems: "center", h: "full" })}>

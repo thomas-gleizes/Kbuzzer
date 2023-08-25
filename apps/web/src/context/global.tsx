@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { useMount } from "react-use"
 
-import { Parameters, PHASE, Player } from "@Kbuzzer/common"
+import { Parameters, PHASE, Player } from "@kbuzzer/common"
 
 const GlobalContext = createContext<{
   isAdmin: boolean

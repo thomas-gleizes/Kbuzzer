@@ -1,6 +1,6 @@
 import { isMainThread, parentPort, workerData } from "node:worker_threads"
 
-import { Parameters, Player, PHASE } from "@Kbuzzer/common"
+import { Parameters, Player, PHASE } from "@kbuzzer/common"
 
 if (isMainThread) throw new Error("This file can only be run as a worker")
 if (!parentPort) throw new Error("This file can only be run as a worker")
