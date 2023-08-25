@@ -42,6 +42,11 @@ export const Answer: Component = () => {
     })
   })
 
+  useMount(() => {
+    const element: HTMLInputElement = document.querySelector("#input")
+    if (element) element.focus()
+  })
+
   return (
     <Card>
       {expireAt && <ExpireIn timestamp={expireAt} />}
@@ -60,6 +65,7 @@ export const Answer: Component = () => {
 
         <div className={css({ mt: 2 })}>
           <Input
+            id="input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             className={styles.input}
